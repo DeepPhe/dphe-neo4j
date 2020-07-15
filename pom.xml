@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>org.healthnlp</groupId>
+   <artifactId>deepphe-neo4j</artifactId>
+   <version>0.4.0</version>
+   <name>deepphe-neo4j</name>
+   <description>Cancer Deep Phenotype Extraction (DeepPhe) Neo4j code module</description>
+   <packaging>jar</packaging>
+   <properties>
+      <ctakes.version>4.0.1-SNAPSHOT</ctakes.version>
+      <maven.compiler.source>1.8</maven.compiler.source>
+      <maven.compiler.target>1.8</maven.compiler.target>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <neo4j.version>3.5.1</neo4j.version>
+   </properties>
+   <dependencies>
+      <!--  neo4j for ontology graph  -->
+      <dependency>
+         <groupId>org.neo4j</groupId>
+         <artifactId>neo4j</artifactId>
+         <version>${neo4j.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.neo4j.test</groupId>
+         <artifactId>neo4j-harness</artifactId>
+         <version>${neo4j.version}</version>
+         <scope>test</scope>
+      </dependency>
+
+      <dependency>
+         <groupId>org.neo4j.driver</groupId>
+         <artifactId>neo4j-java-driver</artifactId>
+         <version>1.7.5</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.google.code.gson</groupId>
+         <artifactId>gson</artifactId>
+         <version>2.8.6</version>
+      </dependency>
+
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+         <version>1.2.17</version>
+      </dependency>
+      </dependencies>
+
+   <build>
+      <!-- It's good practice to explicitly declare versions for all plugins -->
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.eclipse.m2e</groupId>
+               <artifactId>lifecycle-mapping</artifactId>
+               <version>1.0</version>
+               <configuration>
+                  <lifecycleMappingMetadata>
+                     <pluginExecutions>
+                        <pluginExecution>
+                           <!-- This is needed to execute/unpack resources in m2e eclipse ide
+                              Currently used in the ctakes-dictionary-lookup project -->
+                           <pluginExecutionFilter>
+                              <groupId>org.apache.maven.plugins</groupId>
+                              <artifactId>maven-dependency-plugin</artifactId>
+                              <versionRange>2.8</versionRange>
+                              <goals>
+                                 <goal>unpack-dependencies</goal>
+                              </goals>
+                           </pluginExecutionFilter>
+                           <action>
+                              <execute>
+                                 <runOnIncremental>true</runOnIncremental>
+                              </execute>
+                           </action>
+                        </pluginExecution>
+                        <pluginExecution>
+                           <!-- Ignore the Maven remote resources plugin in Eclipse. We don't
+                              use it from Eclipse, and it causes a warning if m2e is not configured to
+                              ignore it as below. -->
+                           <pluginExecutionFilter>
+                              <groupId>org.apache.maven.plugins</groupId>
+                              <artifactId>maven-remote-resources-plugin</artifactId>
+                              <versionRange>[1.0.0,)</versionRange>
+                              <goals>
+                                 <goal>process</goal>
+                              </goals>
+                           </pluginExecutionFilter>
+                           <action>
+                              <ignore/>
+                           </action>
+                        </pluginExecution>
+                     </pluginExecutions>
+                  </lifecycleMappingMetadata>
+               </configuration>
+            </plugin>
+            <!-- Maven expects tests to start or end with "Test", not "Tests", so
+                           explicitly include files ending in "Tests" -->
+            <plugin>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>2.12.1</version>
+               <configuration>
+                  <includes>
+                     <include>**/Test*.java</include>
+                     <include>**/*Test.java</include>
+                     <include>**/*Tests.java</include>
+                     <include>**/*TestCase.java</include>
+                     <include>**/*Tester.java</include>
+                  </includes>
+                  <argLine>-Xmx3g</argLine>
+                  <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>
+               </configuration>
+            </plugin>
+         </plugins>
+      </pluginManagement>
+   </build>
+</project>
