@@ -14,7 +14,7 @@
       <maven.compiler.source>1.8</maven.compiler.source>
       <maven.compiler.target>1.8</maven.compiler.target>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <neo4j.version>3.5.1</neo4j.version>
+      <neo4j.version>3.5.20</neo4j.version>
    </properties>
    <dependencies>
       <!--  neo4j for ontology graph  -->
@@ -34,7 +34,8 @@
       <dependency>
          <groupId>org.neo4j.driver</groupId>
          <artifactId>neo4j-java-driver</artifactId>
-         <version>1.7.5</version>
+<!--         <version>1.7.5</version>-->
+         <version>4.0.1</version>
       </dependency>
 
       <dependency>
