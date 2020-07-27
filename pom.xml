@@ -34,7 +34,6 @@
       <dependency>
          <groupId>org.neo4j.driver</groupId>
          <artifactId>neo4j-java-driver</artifactId>
-<!--         <version>1.7.5</version>-->
          <version>4.0.1</version>
       </dependency>
 
@@ -55,67 +54,6 @@
       <!-- It's good practice to explicitly declare versions for all plugins -->
       <pluginManagement>
          <plugins>
-            <plugin>
-               <groupId>org.eclipse.m2e</groupId>
-               <artifactId>lifecycle-mapping</artifactId>
-               <version>1.0</version>
-               <configuration>
-                  <lifecycleMappingMetadata>
-                     <pluginExecutions>
-                        <pluginExecution>
-                           <!-- This is needed to execute/unpack resources in m2e eclipse ide
-                              Currently used in the ctakes-dictionary-lookup project -->
-                           <pluginExecutionFilter>
-                              <groupId>org.apache.maven.plugins</groupId>
-                              <artifactId>maven-dependency-plugin</artifactId>
-                              <versionRange>2.8</versionRange>
-                              <goals>
-                                 <goal>unpack-dependencies</goal>
-                              </goals>
-                           </pluginExecutionFilter>
-                           <action>
-                              <execute>
-                                 <runOnIncremental>true</runOnIncremental>
-                              </execute>
-                           </action>
-                        </pluginExecution>
-                        <pluginExecution>
-                           <!-- Ignore the Maven remote resources plugin in Eclipse. We don't
-                              use it from Eclipse, and it causes a warning if m2e is not configured to
-                              ignore it as below. -->
-                           <pluginExecutionFilter>
-                              <groupId>org.apache.maven.plugins</groupId>
-                              <artifactId>maven-remote-resources-plugin</artifactId>
-                              <versionRange>[1.0.0,)</versionRange>
-                              <goals>
-                                 <goal>process</goal>
-                              </goals>
-                           </pluginExecutionFilter>
-                           <action>
-                              <ignore/>
-                           </action>
-                        </pluginExecution>
-                     </pluginExecutions>
-                  </lifecycleMappingMetadata>
-               </configuration>
-            </plugin>
-            <!-- Maven expects tests to start or end with "Test", not "Tests", so
-                           explicitly include files ending in "Tests" -->
-            <plugin>
-               <artifactId>maven-surefire-plugin</artifactId>
-               <version>2.12.1</version>
-               <configuration>
-                  <includes>
-                     <include>**/Test*.java</include>
-                     <include>**/*Test.java</include>
-                     <include>**/*Tests.java</include>
-                     <include>**/*TestCase.java</include>
-                     <include>**/*Tester.java</include>
-                  </includes>
-                  <argLine>-Xmx3g</argLine>
-                  <forkedProcessTimeoutInSeconds>900</forkedProcessTimeoutInSeconds>
-               </configuration>
-            </plugin>
          </plugins>
       </pluginManagement>
    </build>
