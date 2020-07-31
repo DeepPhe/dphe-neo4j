@@ -28,7 +28,8 @@ final public class ServiceFactory {
       }
       final GraphDatabaseService graphDb = new GraphDatabaseFactory()
             .newEmbeddedDatabaseBuilder( graphDbFile )
-            .setConfig( GraphDatabaseSettings.read_only, "true" )
+            // setting access to read only is persisting across use.  This breaks up other modules that need to write.
+//            .setConfig( GraphDatabaseSettings.read_only, "true" )
             .newGraphDatabase();
       if ( !graphDb.isAvailable( 500 ) ) {
          LOGGER.error( "Could not initialize neo4j connection for: " + graphDbPath );
