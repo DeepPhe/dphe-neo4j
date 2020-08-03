@@ -3,9 +3,6 @@ package org.healthnlp.deepphe.neo4j.embedded;
 import org.apache.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.factory.GraphDatabaseSettings;
-import org.neo4j.kernel.impl.store.kvstore.RotationTimeoutException;
-import org.neo4j.kernel.lifecycle.LifecycleException;
 
 import java.io.File;
 
@@ -35,21 +32,15 @@ final public class ServiceFactory {
          LOGGER.error( "Could not initialize neo4j connection for: " + graphDbPath );
          System.exit( -1 );
       }
-      registerShutdownHook( graphDb );
+      registerShutdownHook( graphDb, graphDbPath );
       return graphDb;
    }
 
-   static private void registerShutdownHook( final GraphDatabaseService graphDb ) {
+   static private void registerShutdownHook( final GraphDatabaseService graphDb, final String graphDbPath ) {
       // Registers a shutdown hook for the Neo4j instance so that it
       // shuts down nicely when the VM exits (even if you "Ctrl-C" the
       // running application).
-      Runtime.getRuntime().addShutdownHook( new Thread( () -> {
-         try {
-            graphDb.shutdown();
-         } catch ( LifecycleException | RotationTimeoutException multE ) {
-            // ignore
-         }
-      } ) );
+      Runtime.getRuntime().addShutdownHook( new ShutdownHook( graphDb, graphDbPath ) );
    }
 
 
