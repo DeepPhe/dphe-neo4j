@@ -10,51 +10,105 @@ import org.neo4j.kernel.lifecycle.LifecycleException;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A shutdown hook for the Neo4j instance so that it
  * shuts down nicely when the VM exits (even if you "Ctrl-C" the
  * running application).
+ *
+ * There are several levels of protection to protect spawning multiple shutdown hooks for a graphDb,
+ * plus some protection against shutting down a graphDb more than once.
  * @author SPF , chip-nlp
  * @version %I%
  * @since 8/3/2020
  */
-public class ShutdownHook extends Thread {
+final public class ShutdownHook extends Thread {
+
+   static private final String UNKNOWN_DIR = "UNKNOWN_DIR";
+
+   static private final Collection<Integer> GRAPH_HASHES = new HashSet<>();
+
+   static public void registerShutdownHook( final GraphDatabaseService graphDb ) {
+      registerShutdownHook( graphDb, UNKNOWN_DIR );
+   }
+
+   static public void registerShutdownHook( final GraphDatabaseService graphDb, final String directory ) {
+      synchronized ( UNKNOWN_DIR ) {
+         if ( GRAPH_HASHES.contains( graphDb.hashCode() ) ) {
+            return;
+         }
+         GRAPH_HASHES.add( graphDb.hashCode() );
+         // Registers a shutdown hook for the Neo4j instance so that it
+         // shuts down nicely when the VM exits (even if you "Ctrl-C" the
+         // running application).
+         Runtime.getRuntime().addShutdownHook( new ShutdownHook( graphDb, directory ) );
+      }
+   }
+
+   /**
+    * Only use this for testing!!!
+    * @param graphDb -
+    * @param directory -
+    * @return -
+    */
+   static public ShutdownHook createTestHook( final GraphDatabaseService graphDb, final String directory ) {
+      return new ShutdownHook( graphDb, directory );
+   }
+
 
    final GraphDatabaseService _graphDb;
    final String _directory;
 
-   public ShutdownHook( final GraphDatabaseService graphDb, final String directory ) {
+   private ShutdownHook( final GraphDatabaseService graphDb ) {
+      this( graphDb, UNKNOWN_DIR );
+   }
+
+   private ShutdownHook( final GraphDatabaseService graphDb, final String directory ) {
       _graphDb = graphDb;
       _directory = directory;
    }
 
    public void run() {
-      try {
-         final LogFiles logFiles = ((GraphDatabaseAPI)_graphDb).getDependencyResolver()
-                                                               .resolveDependency( LogFiles.class );
-         final File[] txLogFiles = logFiles.logFiles();
-         _graphDb.shutdown();
-         // Delete the transaction logs.  This should actually help restarts.
-         for ( File txLogFile : txLogFiles ) {
-            FileUtils.deleteFile( txLogFile );
-         }
-         // Delete the counts logs.  This is necessary when different hosts restart a graph.
-         final File graphDir = new File( _directory );
-         if ( graphDir.isDirectory() ) {
-            final File[] files = graphDir.listFiles();
-            if ( files != null ) {
-               Arrays.stream( files )
-                     .filter( f -> f.getAbsolutePath().contains( ".counts.db" ) )
-                     .forEach( FileUtils::deleteFile );
+      // class-level lock, only one shutdown hook can execute this at a time.
+      synchronized ( UNKNOWN_DIR ) {
+         try {
+            if ( !_graphDb.isAvailable( 1000 ) ) {
+               // Wait a maximum of 1000 milliseconds and see if the graph is available.
+               // If not, assume that it has already been shut down.
+               return;
             }
+            final LogFiles logFiles = ((GraphDatabaseAPI)_graphDb).getDependencyResolver()
+                                                                  .resolveDependency( LogFiles.class );
+            final File[] txLogFiles = logFiles.logFiles();
+            _graphDb.shutdown();
+            String _parentDir = UNKNOWN_DIR;
+            // Delete the transaction logs.  This should actually help restarts.
+            for ( File txLogFile : txLogFiles ) {
+               _parentDir = txLogFile.getParent();
+               FileUtils.deleteFile( txLogFile );
+            }
+            // Delete the counts logs.  This is necessary when different hosts restart a graph.
+            String directory = _directory.equals( UNKNOWN_DIR ) ? _parentDir : _directory;
+            if ( directory.equals( UNKNOWN_DIR ) ) {
+               return;
+            }
+            final File graphDir = new File( directory );
+            if ( graphDir.isDirectory() ) {
+               final File[] files = graphDir.listFiles();
+               if ( files != null ) {
+                  Arrays.stream( files )
+                        .filter( f -> f.getAbsolutePath().contains( ".counts.db" ) )
+                        .forEach( FileUtils::deleteFile );
+               }
+            }
+         } catch ( LifecycleException | RotationTimeoutException |
+               ClassCastException multE ) {
+            System.err.println( multE.getMessage() );
+            multE.printStackTrace();
+            // ignore
          }
-      } catch ( LifecycleException | RotationTimeoutException |
-            ClassCastException multE ) {
-         System.err.println( multE.getMessage() );
-         multE.printStackTrace();
-         // ignore
       }
    }
 

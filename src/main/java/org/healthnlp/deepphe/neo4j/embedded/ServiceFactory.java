@@ -32,15 +32,8 @@ final public class ServiceFactory {
          LOGGER.error( "Could not initialize neo4j connection for: " + graphDbPath );
          System.exit( -1 );
       }
-      registerShutdownHook( graphDb, graphDbPath );
+      ShutdownHook.registerShutdownHook( graphDb, graphDbPath );
       return graphDb;
-   }
-
-   static private void registerShutdownHook( final GraphDatabaseService graphDb, final String graphDbPath ) {
-      // Registers a shutdown hook for the Neo4j instance so that it
-      // shuts down nicely when the VM exits (even if you "Ctrl-C" the
-      // running application).
-      Runtime.getRuntime().addShutdownHook( new ShutdownHook( graphDb, graphDbPath ) );
    }
 
 

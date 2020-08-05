@@ -1,6 +1,7 @@
 package org.healthnlp.deepphe.neo4j.writer;
 
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
+import org.healthnlp.deepphe.neo4j.embedded.ShutdownHook;
 import org.healthnlp.deepphe.neo4j.node.*;
 import org.healthnlp.deepphe.neo4j.util.SearchUtil;
 import org.neo4j.graphdb.*;
@@ -26,7 +27,6 @@ public enum NodeWriter {
 
    private final Map<String, RelationshipType> _relationshipTypes = new HashMap<>();
 
-
    /////////////////////////////////////////////////////////////////////////////////////////
    //
    //                            COHORT INITIALIZATION
@@ -40,6 +40,9 @@ public enum NodeWriter {
       createAllPatientsNode( graphDb, log, thingNode );
       createAllDocumentsNode( graphDb, log, thingNode );
       createUnknownStageNode( graphDb, log, thingNode );
+      // Writing is only done on the neo4j server.  Because the server generates its own graphDb,
+      // we can't explicitly add a specific shutdown hook.  Try to do it here.
+      ShutdownHook.registerShutdownHook( graphDb );
    }
 
    static private void createAllPatientsNode( final GraphDatabaseService graphDb,

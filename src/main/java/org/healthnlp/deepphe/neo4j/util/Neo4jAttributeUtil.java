@@ -18,7 +18,7 @@ import java.util.HashSet;
  * @version %I%
  * @since 1/31/2020
  */
-public class Neo4jAttributeUtil {
+final public class Neo4jAttributeUtil {
 
    static private final Logger LOGGER = Logger.getLogger( "Neo4jAttributeUtil" );
 

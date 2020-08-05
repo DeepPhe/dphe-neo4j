@@ -20,7 +20,7 @@ public enum DriverConnection {
    private Driver _driver;
 
 
-   public Driver createDriver( final String url, final String user, final String pass ) {
+   synchronized public Driver createDriver( final String url, final String user, final String pass ) {
       if ( _driver != null ) {
          return _driver;
       }
