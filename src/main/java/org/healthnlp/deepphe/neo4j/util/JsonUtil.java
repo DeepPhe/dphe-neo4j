@@ -25,6 +25,7 @@ final public class JsonUtil {
    static private final String COMMA = "_cMa_";
    static private final String SEMICOLON = "_sCn_";
    static private final String COLON = "_cLn_";
+   static private final String SLASH = "_sLs_";
 
    static private final Map<Character,String> SUBSTITUTES = new HashMap<>( 12 );
    static {
@@ -40,6 +41,7 @@ final public class JsonUtil {
       SUBSTITUTES.put( ',', COMMA );
       SUBSTITUTES.put( ';', SEMICOLON );
       SUBSTITUTES.put( ':', COLON );
+      SUBSTITUTES.put( '\\', SLASH );
    }
 
    static public String packForNeo4j( final String json ) {

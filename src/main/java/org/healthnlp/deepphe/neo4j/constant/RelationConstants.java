@@ -3,6 +3,7 @@ package org.healthnlp.deepphe.neo4j.constant;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * @author SPF , chip-nlp
@@ -308,15 +309,19 @@ final public class RelationConstants {
       );
    }
 
+   static private final Collection<String> SITE_RELATIONS = new HashSet<>( Arrays.asList(
+         DISEASE_HAS_PRIMARY_ANATOMIC_SITE,
+         DISEASE_HAS_ASSOCIATED_ANATOMIC_SITE,
+         DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
+         Disease_Has_Associated_Region,
+         Disease_Has_Associated_Cavity,
+         Finding_Has_Associated_Site,
+         Finding_Has_Associated_Region,
+         Finding_Has_Associated_Cavity
+   ) );
+
    static public boolean isHasSiteRelation( final String relationName ) {
-      return relationName.equals( RelationConstants.DISEASE_HAS_PRIMARY_ANATOMIC_SITE )
-             || relationName.equals( RelationConstants.DISEASE_HAS_ASSOCIATED_ANATOMIC_SITE )
-             || relationName.equals( RelationConstants.DISEASE_HAS_METASTATIC_ANATOMIC_SITE )
-             || relationName.equals( RelationConstants.Disease_Has_Associated_Region )
-             || relationName.equals( RelationConstants.Disease_Has_Associated_Cavity )
-             || relationName.equals( RelationConstants.Finding_Has_Associated_Site )
-             || relationName.equals( RelationConstants.Finding_Has_Associated_Region )
-             || relationName.equals( RelationConstants.Finding_Has_Associated_Cavity );
+      return SITE_RELATIONS.contains( relationName );
    }
 
 
