@@ -42,7 +42,8 @@ public enum NodeWriter {
       createUnknownStageNode( graphDb, log, thingNode );
       // Writing is only done on the neo4j server.  Because the server generates its own graphDb,
       // we can't explicitly add a specific shutdown hook.  Try to do it here.
-      ShutdownHook.registerShutdownHook( graphDb );
+      // --> This didn't work, so don't bother.
+//      ShutdownHook.registerShutdownHook( graphDb );
    }
 
    static private void createAllPatientsNode( final GraphDatabaseService graphDb,
