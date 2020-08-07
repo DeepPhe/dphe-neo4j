@@ -44,6 +44,7 @@ final public class ShutdownHook extends Thread {
          // shuts down nicely when the VM exits (even if you "Ctrl-C" the
          // running application).
          Runtime.getRuntime().addShutdownHook( new ShutdownHook( graphDb, directory ) );
+         System.out.println( "Registered Shutdown Hook for " + graphDb.hashCode() + " in " + directory );
       }
    }
 
@@ -74,9 +75,10 @@ final public class ShutdownHook extends Thread {
       // class-level lock, only one shutdown hook can execute this at a time.
       synchronized ( UNKNOWN_DIR ) {
          try {
-            if ( !_graphDb.isAvailable( 1000 ) ) {
-               // Wait a maximum of 1000 milliseconds and see if the graph is available.
+            if ( !_graphDb.isAvailable( 10000 ) ) {
+               // Wait a maximum of 10 seconds and see if the graph is available.
                // If not, assume that it has already been shut down.
+               System.out.println( "GraphDb " + _graphDb.hashCode() + " is not available for shutdown.");
                return;
             }
             final LogFiles logFiles = ((GraphDatabaseAPI)_graphDb).getDependencyResolver()
@@ -99,10 +101,11 @@ final public class ShutdownHook extends Thread {
                final File[] files = graphDir.listFiles();
                if ( files != null ) {
                   Arrays.stream( files )
-                        .filter( f -> f.getAbsolutePath().contains( ".counts.db" ) )
+                        .filter( f -> f.getName().startsWith( "neostore.counts.db" ) )
                         .forEach( FileUtils::deleteFile );
                }
             }
+            System.out.println( "GraphDb " + _graphDb.hashCode() + " has been shutdown.");
          } catch ( LifecycleException | RotationTimeoutException |
                ClassCastException multE ) {
             System.err.println( multE.getMessage() );

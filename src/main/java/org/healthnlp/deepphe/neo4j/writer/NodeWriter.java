@@ -65,6 +65,10 @@ public enum NodeWriter {
          allPatientsNode.setProperty( NAME_KEY, PATIENT_URI );
          allPatientsNode.createRelationshipTo( subjectNode, IS_A_RELATION );
          tx.success();
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -84,6 +88,10 @@ public enum NodeWriter {
          allDocumentsNode.setProperty( NAME_KEY, EMR_NOTE_URI );
          allDocumentsNode.createRelationshipTo( thingNode, IS_A_RELATION );
          tx.success();
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -103,6 +111,10 @@ public enum NodeWriter {
          unknownStageNode.setProperty( NAME_KEY, UriConstants.STAGE_UNKNOWN );
          unknownStageNode.createRelationshipTo( thingNode, IS_A_RELATION );
          tx.success();
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -162,6 +174,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( TransactionFailureException txE ) {
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -188,6 +204,10 @@ public enum NodeWriter {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot create put patient " + patientId + " in graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return null;
    }
@@ -256,6 +276,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( TransactionFailureException txE ) {
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -286,6 +310,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( MultipleFoundException mfE ) {
          log.error( mfE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -347,6 +375,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( MultipleFoundException mfE ) {
          log.error( mfE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -436,6 +468,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( MultipleFoundException mfE ) {
          log.error( mfE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 
@@ -483,6 +519,10 @@ public enum NodeWriter {
          tx.success();
       } catch ( MultipleFoundException mfE ) {
          log.error( mfE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
    }
 

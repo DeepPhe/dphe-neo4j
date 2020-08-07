@@ -57,6 +57,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get patient " + patientId + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return patient;
    }
@@ -85,6 +89,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get note " + noteId + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       final Note badNote = new Note();
       badNote.setId( noteId );
@@ -105,6 +113,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get notes for " + patientNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return notes;
    }
@@ -131,6 +143,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get Note " + noteNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return note;
    }
@@ -157,6 +173,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get sections for " + noteNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return sections;
    }
@@ -176,6 +196,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get Section " + sectionNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return null;
    }
@@ -202,6 +226,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get mentions for " + noteNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return mentions;
    }
@@ -241,6 +269,10 @@ public enum NodeReader {
       } catch ( TransactionFailureException txE ) {
          log.error( "Cannot get Mention " + mentionNode.getId() + " from graph." );
          log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
       }
       return null;
    }
