@@ -127,6 +127,10 @@ final public class Neo4jRelationUtil {
                                                       final Collection<String> relationTargetUris ) {
       final Collection<String> targetUris = new HashSet<>();
       for ( String relationTargetUri : relationTargetUris ) {
+         if ( targetUris.contains( relationTargetUri ) ) {
+            // the relation target uri and its branch nodes are already in the collection of branch nodes.
+            continue;
+         }
          final Collection<String> targetableBranch = SearchUtil.getBranchUris( graphDb, relationTargetUri );
          targetUris.addAll( targetableBranch );
       }
