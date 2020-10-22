@@ -6,6 +6,7 @@ import org.neo4j.graphdb.MultipleFoundException;
 import org.neo4j.graphdb.Transaction;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.NAME_KEY;

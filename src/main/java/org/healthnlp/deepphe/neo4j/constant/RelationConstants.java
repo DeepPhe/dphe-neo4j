@@ -324,6 +324,17 @@ final public class RelationConstants {
       return SITE_RELATIONS.contains( relationName );
    }
 
+   static private final  Collection<String> LOCATION_RELATIONS
+         = new HashSet<>( Arrays.asList(
+         HAS_BODY_MODIFIER,
+         HAS_LATERALITY,
+         HAS_QUADRANT,
+         HAS_CLOCKFACE )
+   );
+   static public boolean isLocationRelation( final String relationName ) {
+      return isHasSiteRelation( relationName ) || LOCATION_RELATIONS.contains( relationName );
+   }
+
 
 }
 
