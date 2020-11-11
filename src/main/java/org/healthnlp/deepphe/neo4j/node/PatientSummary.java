@@ -11,6 +11,7 @@ import java.util.List;
 public class PatientSummary {
 
    private String id;
+   private Patient patient;
    private List<NeoplasmSummary> neoplasms;
 
    public String getId() {
@@ -19,6 +20,14 @@ public class PatientSummary {
 
    public void setId( final String id ) {
       this.id = id;
+   }
+
+   public Patient getPatient() {
+      return patient;
+   }
+
+   public void setPatient( final Patient patient ) {
+      this.patient = patient;
    }
 
    public List<NeoplasmSummary> getNeoplasms() {
