@@ -63,12 +63,12 @@ final public class Neo4jConstants {
    static public final String STRUCTURED_ENTRY_URI = "Structured_Entry";
 //   static public final String TEXT_MENTION_URI = "Text_Mention";
 
-   static public final String PATIENT_NAME = "Patient_Name";
-   static public final String PATIENT_GENDER = "Patient_Gender";
-   static public final String PATIENT_BIRTH_DATE = "Patient_Birth_Date";
-   static public final String PATIENT_DEATH_DATE = "Patient_Death_Date";
-   static public final String PATIENT_FIRST_ENCOUNTER = "Patient_First_Encounter";
-   static public final String PATIENT_LAST_ENCOUNTER = "Patient_Last_Encounter";
+   static public final String PATIENT_NAME = "patientName";
+   static public final String PATIENT_GENDER = "patientGender";
+   static public final String PATIENT_BIRTH_DATE = "patientBirth_Date";
+   static public final String PATIENT_DEATH_DATE = "patientDeathDate";
+   static public final String PATIENT_FIRST_ENCOUNTER = "patientFirstEncounter";
+   static public final String PATIENT_LAST_ENCOUNTER = "PatientLastEncounter";
 
    static public final String NOTE_NAME = "Note_Name";
    static public final String NOTE_TYPE = "Note_Type";
