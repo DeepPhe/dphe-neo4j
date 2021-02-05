@@ -58,13 +58,12 @@
       </pluginManagement>
    </build>
 
-   <distributionManagement>
+    <distributionManagement>
       <repository>
          <id>github</id>
-         <name>GitHub Packages</name>
-         <url>https://maven.pkg.github.com/DeepPhe/dphe-stream</url>
+         <name>DeepPhe-Robot</name>
+         <url>https://maven.pkg.github.com/DeepPhe/dphe-neo4j</url>
       </repository>
    </distributionManagement>
-
 
 </project>

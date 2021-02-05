@@ -1,6 +1,8 @@
 package org.healthnlp.deepphe.neo4j.node;
 
 
+import java.util.List;
+
 /**
  * @author SPF , chip-nlp
  * @version %I%
@@ -12,11 +14,13 @@ public class NeoplasmSummary {
    private String site_major;
    private String site_minor;
    private String site_related;
+   private String laterality;
+   private List<NeoplasmAttribute> attributes;
+
    private String topography_major;
    private String topography_minor;
    private String histology;
    private String behavior;
-   private String laterality;
    private String laterality_code;
    private String grade;
    private String pathologic_t;
@@ -38,6 +42,15 @@ public class NeoplasmSummary {
    public void setId( final String id ) {
       this.id = id;
    }
+
+   public List<NeoplasmAttribute> getAttributes() {
+      return attributes;
+   }
+
+   public void setAttributes( final List<NeoplasmAttribute> attributes ) {
+      this.attributes = attributes;
+   }
+
 
    public String getSite_major() {
       return site_major;
