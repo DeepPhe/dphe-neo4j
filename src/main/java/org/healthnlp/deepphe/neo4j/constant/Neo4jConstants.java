@@ -65,22 +65,22 @@ final public class Neo4jConstants {
 
    static public final String PATIENT_NAME = "patientName";
    static public final String PATIENT_GENDER = "patientGender";
-   static public final String PATIENT_BIRTH_DATE = "patientBirth_Date";
+   static public final String PATIENT_BIRTH_DATE = "patientBirthDate";
    static public final String PATIENT_DEATH_DATE = "patientDeathDate";
    static public final String PATIENT_FIRST_ENCOUNTER = "patientFirstEncounter";
-   static public final String PATIENT_LAST_ENCOUNTER = "PatientLastEncounter";
+   static public final String PATIENT_LAST_ENCOUNTER = "patientLastEncounter";
 
-   static public final String NOTE_NAME = "Note_Name";
-   static public final String NOTE_TYPE = "Note_Type";
-   static public final String NOTE_TEXT = "Note_Text";
-   static public final String NOTE_DATE = "Note_Date";
-   static public final String NOTE_EPISODE = "Note_Episode";
+   static public final String NOTE_NAME = "noteName";
+   static public final String NOTE_TYPE = "noteType";
+   static public final String NOTE_TEXT = "noteText";
+   static public final String NOTE_DATE = "noteDate";
+   static public final String NOTE_EPISODE = "noteEpisode";
 
-   static public final String SECTION_TYPE = "Section_Type";
-   static public final String VALUE_TEXT = "Value_Text";
-   static public final String VALUE_KEY_TEXT = "Value_Key";
-   static public final String TEXT_SPAN_BEGIN = "Text_Span_Begin";
-   static public final String TEXT_SPAN_END = "Text_Span_End";
+   static public final String SECTION_TYPE = "sectionType";
+   static public final String VALUE_TEXT = "valueText";
+   static public final String VALUE_KEY_TEXT = "valueKey";
+   static public final String TEXT_SPAN_BEGIN = "textSpanBegin";
+   static public final String TEXT_SPAN_END = "textSpanEnd";
 
    static public final String COREF_ID = "Coref_Id";
 
