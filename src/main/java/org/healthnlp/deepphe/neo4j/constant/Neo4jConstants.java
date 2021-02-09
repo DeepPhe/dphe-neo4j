@@ -53,7 +53,7 @@ final public class Neo4jConstants {
 //   static public final String PROGRESS_NOTE_URI = "Progress_Note";
 //   static public final String RADIOLOGY_NOTE_URI = "Radiology_Note";
 
-//   static public final String SUMMARY_URI = "Summary";
+   //   static public final String SUMMARY_URI = "Summary";
    static public final String CANCER_SUMMARY_URI = "Cancer_Summary";
    static public final String TUMOR_SUMMARY_URI = "Tumor_Summary";
 
@@ -63,24 +63,24 @@ final public class Neo4jConstants {
    static public final String STRUCTURED_ENTRY_URI = "Structured_Entry";
 //   static public final String TEXT_MENTION_URI = "Text_Mention";
 
-   static public final String PATIENT_NAME = "patientName";
-   static public final String PATIENT_GENDER = "patientGender";
-   static public final String PATIENT_BIRTH_DATE = "patientBirthDate";
-   static public final String PATIENT_DEATH_DATE = "patientDeathDate";
-   static public final String PATIENT_FIRST_ENCOUNTER = "patientFirstEncounter";
-   static public final String PATIENT_LAST_ENCOUNTER = "patientLastEncounter";
+   static public final String PATIENT_NAME = "Patient_Name";
+   static public final String PATIENT_GENDER = "Patient_Gender";
+   static public final String PATIENT_BIRTH_DATE = "Patient_Birth_Date";
+   static public final String PATIENT_DEATH_DATE = "Patient_Death_Date";
+   static public final String PATIENT_FIRST_ENCOUNTER = "Patient_First_Encounter";
+   static public final String PATIENT_LAST_ENCOUNTER = "Patient_Last_Encounter";
 
-   static public final String NOTE_NAME = "noteName";
-   static public final String NOTE_TYPE = "noteType";
-   static public final String NOTE_TEXT = "noteText";
-   static public final String NOTE_DATE = "noteDate";
-   static public final String NOTE_EPISODE = "noteEpisode";
+   static public final String NOTE_NAME = "Note_Name";
+   static public final String NOTE_TYPE = "Note_Type";
+   static public final String NOTE_TEXT = "Note_Text";
+   static public final String NOTE_DATE = "Note_Date";
+   static public final String NOTE_EPISODE = "Note_Episode";
 
-   static public final String SECTION_TYPE = "sectionType";
-   static public final String VALUE_TEXT = "valueText";
-   static public final String VALUE_KEY_TEXT = "valueKey";
-   static public final String TEXT_SPAN_BEGIN = "textSpanBegin";
-   static public final String TEXT_SPAN_END = "textSpanEnd";
+   static public final String SECTION_TYPE = "Section_Type";
+   static public final String VALUE_TEXT = "Value_Text";
+   static public final String VALUE_KEY_TEXT = "Value_Key";
+   static public final String TEXT_SPAN_BEGIN = "Text_Span_Begin";
+   static public final String TEXT_SPAN_END = "Text_Span_End";
 
    static public final String COREF_ID = "Coref_Id";
 
@@ -111,18 +111,18 @@ final public class Neo4jConstants {
    //   static public final RelationshipType CANCER_HAS_FACT_RELATION = RelationshipType.withName( CANCER_HAS_FACT );
 //   static public final RelationshipType TUMOR_HAS_FACT_RELATION = RelationshipType.withName( TUMOR_HAS_FACT );
    static public final RelationshipType NOTE_HAS_TEXT_MENTION_RELATION
-         = RelationshipType.withName( NOTE_HAS_TEXT_MENTION );
+           = RelationshipType.withName( NOTE_HAS_TEXT_MENTION );
    static public final RelationshipType FACT_HAS_TEXT_MENTION_RELATION
-         = RelationshipType.withName( FACT_HAS_TEXT_MENTION );
+           = RelationshipType.withName( FACT_HAS_TEXT_MENTION );
 //   static public final RelationshipType FACT_HAS_RELATED_FACT_RELATION
 //         = RelationshipType.withName( FACT_HAS_RELATED_FACT );
 
    //   static public final String FACT_RELATION_TYPE = "Fact_Relation_Type";
 //   static public final String SUMMARY_FACT_RELATION_TYPE = "Summary_Fact_Relation_Type";
    static public final RelationshipType MENTION_COREF_RELATION
-         = RelationshipType.withName( MENTION_COREF );
+           = RelationshipType.withName( MENTION_COREF );
    static public final RelationshipType NOTE_HAS_SECTION_RELATION
-         = RelationshipType.withName( NOTE_HAS_SECTION );
+           = RelationshipType.withName( NOTE_HAS_SECTION );
 
    static public final String INSTANCE_TEMPORALITY = "Temporality";
    static public final String INSTANCE_NEGATED = "Negated";
