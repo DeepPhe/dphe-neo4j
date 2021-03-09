@@ -4,16 +4,36 @@ import java.util.List;
 
 public class NeoplasmAttribute {
 
+   private String id;
+   private String classUri;
+
    private String name;
    private String value;
+
    private List<Mention> directEvidence;
    private List<Mention> indirectEvidence;
    private List<Mention> notEvidence;
+
    private List<Integer> confidenceFeatures;
    private Integer confidence;
 
+   public String getId() {
+      return id;
+   }
+
+   public void setId( final String id ) {
+      this.id = id;
+   }
    public String getName() {
       return name;
+   }
+
+   public String getClassUri() {
+      return classUri;
+   }
+
+   public void setClassUri( final String classUri ) {
+      this.classUri = classUri;
    }
 
    public void setName( final String name ) {

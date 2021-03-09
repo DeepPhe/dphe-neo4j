@@ -1,14 +1,22 @@
 package org.healthnlp.deepphe.neo4j.writer;
 
+import com.google.gson.Gson;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.healthnlp.deepphe.neo4j.embedded.ShutdownHook;
 import org.healthnlp.deepphe.neo4j.node.*;
+import org.healthnlp.deepphe.neo4j.util.JsonUtil;
 import org.healthnlp.deepphe.neo4j.util.SearchUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
+import org.neo4j.procedure.Description;
+import org.neo4j.procedure.Mode;
+import org.neo4j.procedure.Name;
+import org.neo4j.procedure.Procedure;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
 
@@ -222,6 +230,155 @@ public enum NodeWriter {
       }
       return createPatientNode( graphDb, log, patientId );
    }
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            CANCER DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
+
+
+   public void addCancerInfo( final GraphDatabaseService graphDb,
+                               final Log log,
+                              final String patientId,
+                              final CancerSummary cancer ) {
+      final Node patientNode = getOrCreatePatientNode( graphDb, log, patientId );
+      if ( patientNode == null ) {
+         log.error( "No Patient Node for " + patientId );
+         return;
+      }
+      addCancerInfo( graphDb, log, patientNode, cancer );
+   }
+
+   private void addCancerInfo(  final GraphDatabaseService graphDb,
+                              final Log log,
+                              final Node patientNode,
+                                final CancerSummary cancer ) {
+      final Node cancerNode = createNeoplasmNode( graphDb, log, CANCER_LABEL, cancer );
+      if ( cancerNode == null ) {
+         return;
+      }
+      try ( Transaction tx = graphDb.beginTx() ) {
+         createRelation( graphDb, log, patientNode, cancerNode, SUBJECT_HAS_CANCER_RELATION );
+         final Collection<NeoplasmSummary> tumors = cancer.getTumors();
+         for ( NeoplasmSummary tumor : tumors ) {
+            final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, tumor );
+            if ( tumorNode != null ) {
+               createRelation( graphDb, log, cancerNode, tumorNode, CANCER_HAS_TUMOR_RELATION );
+            }
+         }
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+   }
+
+   private Node createNeoplasmNode(  final GraphDatabaseService graphDb,
+                                      final Log log,
+                                      final Label neoplasmLabel,
+                                      final NeoplasmSummary neoplasm ) {
+      final String id = neoplasm.getId();
+      if ( id == null || id.isEmpty() ) {
+         log.error( "No ID for Neoplasm" );
+         return null;
+      }
+      final String uri = neoplasm.getClassUri();
+      if ( uri == null || uri.isEmpty() ) {
+         log.error( "No Class URI for Neoplasm " + id );
+         return null;
+      }
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Node classNode = SearchUtil.getClassNode( graphDb, uri );
+         if ( classNode == null ) {
+            log.error( "Illegal Class URI for Neoplasm " + id + " " + uri );
+            tx.success();
+            return null;
+         }
+         final Node neoplasmNode = graphDb.createNode( neoplasmLabel );
+         neoplasmNode.setProperty( NAME_KEY, id );
+         setInstanceOf( graphDb, log, neoplasmNode, classNode );
+         final Collection<NeoplasmAttribute> attributes = neoplasm.getAttributes();
+         for ( NeoplasmAttribute attribute : attributes ) {
+            addAttributeNode( graphDb, log, id, neoplasmNode, attribute );
+         }
+         tx.success();
+         return neoplasmNode;
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
+
+   private void addAttributeNode( final GraphDatabaseService graphDb,
+                                         final Log log,
+                                         final String neoplasmId,
+                                         final Node neoplasmNode,
+                                         final NeoplasmAttribute attribute ) {
+      final String id = attribute.getId();
+      if ( id == null || id.isEmpty() ) {
+         log.error( "No ID for Attribute " + attribute.getName() + " " + neoplasmId );
+         return;
+      }
+      final String uri = attribute.getClassUri();
+      if ( uri == null || uri.isEmpty() ) {
+         log.error( "No Class URI for Attribute " + id + " " + neoplasmId );
+         return;
+      }
+      final Node aClassNode = SearchUtil.getClassNode( graphDb, uri );
+      if ( aClassNode == null ) {
+         log.error( "Illegal Class URI for Attribute " + id + " " + uri );
+         return;
+      }
+      final Node attributeNode = graphDb.createNode( ATTRIBUTE_LABEL );
+      attributeNode.setProperty( NAME_KEY, id );
+      setInstanceOf( graphDb, log, attributeNode, aClassNode );
+      createRelation( graphDb, log, neoplasmNode, attributeNode, NEOPLASM_HAS_ATTRIBUTE_RELATION );
+      final String name = attribute.getName();
+      if ( name != null && !name.isEmpty() ) {
+         attributeNode.setProperty( ATTRIBUTE_NAME, name );
+      }
+      final String value = attribute.getValue();
+      if ( value != null && !value.isEmpty() ) {
+         attributeNode.setProperty( ATTRIBUTE_VALUE, value );
+      }
+      addAttributeMentions( graphDb, log, attributeNode,
+                            ATTRIBUTE_DIRECT_MENTION_RELATION,
+                            attribute.getDirectEvidence() );
+      addAttributeMentions( graphDb, log, attributeNode,
+                            ATTRIBUTE_INDIRECT_MENTION_RELATION,
+                            attribute.getIndirectEvidence() );
+      addAttributeMentions( graphDb, log, attributeNode,
+                            ATTRIBUTE_NOT_MENTION_RELATION,
+                            attribute.getNotEvidence() );
+   }
+
+   private void addAttributeMentions( final GraphDatabaseService graphDb,
+                                      final Log log,
+                                      final Node attributeNode,
+                                      final RelationshipType relation,
+                                      final Collection<Mention> mentions ) {
+      for ( Mention mention : mentions ) {
+         final String mentionId = mention.getId();
+         if ( mentionId == null || mentionId.isEmpty() ) {
+            continue;
+         }
+         final Node mentionNode = SearchUtil.getLabeledNode( graphDb, TEXT_MENTION_LABEL, mentionId );
+         if ( mentionNode == null ) {
+            continue;
+         }
+         createRelation( graphDb, log, attributeNode, mentionNode, relation );
+      }
+   }
+
 
    /////////////////////////////////////////////////////////////////////////////////////////
    //

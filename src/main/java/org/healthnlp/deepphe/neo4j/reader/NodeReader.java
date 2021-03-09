@@ -66,6 +66,184 @@ public enum NodeReader {
    }
 
 
+   public PatientSummary getPatientSummary( final GraphDatabaseService graphDb,
+                              final Log log,
+                              final String patientId ) {
+      final PatientSummary patientSummary = new PatientSummary();
+      patientSummary.setId( patientId );
+      final Patient patient = getPatient( graphDb, log, patientId );
+      if ( patient == null ) {
+         return null;
+      }
+      patientSummary.setPatient( patient );
+
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
+         if ( patientNode == null ) {
+            log.error( "No patient node for " + patientId );
+            tx.success();
+            return null;
+         }
+         // get cancer summaries
+         final List<NeoplasmSummary> cancers = getCancers( graphDb, log, patientNode );
+         patientSummary.setNeoplasms( cancers );
+         // Neoplasm is id, class uri and attributes.
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get patient " + patientId + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return patientSummary;
+   }
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            NEOPLASM DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
+
+
+   private List<NeoplasmSummary> getCancers( final GraphDatabaseService graphDb,
+                                final Log log,
+                                final Node patientNode ) {
+      final List<NeoplasmSummary> cancers = new ArrayList<>();
+      try ( Transaction tx = graphDb.beginTx() ) {
+         SearchUtil.getOutRelatedNodes( graphDb, patientNode, SUBJECT_HAS_CANCER_RELATION )
+                   .stream()
+                   .map( n -> createCancer( graphDb, log, n ) )
+                   .filter( Objects::nonNull )
+                   .forEach( cancers::add );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get cancers for " + patientNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return cancers;
+   }
+
+   private CancerSummary createCancer( final GraphDatabaseService graphDb,
+                            final Log log,
+                            final Node cancerNode ) {
+      final CancerSummary cancer = new CancerSummary();
+      try ( Transaction tx = graphDb.beginTx() ) {
+         populateNeoplasm( graphDb, log, cancer, cancerNode );
+         final List<NeoplasmSummary> tumors = new ArrayList<>();
+         SearchUtil.getOutRelatedNodes( graphDb, cancerNode, CANCER_HAS_TUMOR_RELATION )
+                   .stream()
+                   .map( t -> populateNeoplasm( graphDb, log, new NeoplasmSummary(), t ) )
+                   .filter( Objects::nonNull )
+                   .forEach( tumors::add );
+         cancer.setTumors( tumors );
+         tx.success();
+         return cancer;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get cancer " + cancerNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
+
+   private NeoplasmSummary populateNeoplasm( final GraphDatabaseService graphDb,
+                                       final Log log,
+                                       final NeoplasmSummary neoplasm,
+                                       final Node neoplasmNode ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         neoplasm.setId( DataUtil.objectToString( neoplasmNode.getProperty( NAME_KEY ) ) );
+         neoplasm.setClassUri( DataUtil.getUri( graphDb, neoplasmNode ) );
+         final List<NeoplasmAttribute> attributes = getAttributes( graphDb, log, neoplasmNode );
+         neoplasm.setAttributes( attributes );
+         tx.success();
+         return neoplasm;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get neoplasm " + neoplasmNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
+
+   public List<NeoplasmAttribute> getAttributes( final GraphDatabaseService graphDb,
+                                                   final Log log,
+                                                   final Node neoplasmNode ) {
+      final List<NeoplasmAttribute> attributes = new ArrayList<>();
+      try ( Transaction tx = graphDb.beginTx() ) {
+         SearchUtil.getOutRelatedNodes( graphDb, neoplasmNode, NEOPLASM_HAS_ATTRIBUTE_RELATION )
+                   .stream()
+                   .map( a -> createAttribute( graphDb, log, a ) )
+                   .filter( Objects::nonNull )
+                   .forEach( attributes::add );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get attributes for " + neoplasmNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return attributes;
+   }
+
+   private NeoplasmAttribute createAttribute( final GraphDatabaseService graphDb,
+                                          final Log log,
+                                          final Node attributeNode ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final NeoplasmAttribute attribute = new NeoplasmAttribute();
+         attribute.setId( DataUtil.objectToString( attributeNode.getProperty( NAME_KEY ) ) );
+         attribute.setClassUri( DataUtil.getUri( graphDb, attributeNode ) );
+         attribute.setName( DataUtil.objectToString( attributeNode.getProperty( ATTRIBUTE_NAME ) ) );
+         attribute.setValue( DataUtil.objectToString( attributeNode.getProperty( ATTRIBUTE_VALUE ) ) );
+         final List<Mention> directEvidence = new ArrayList<>();
+         SearchUtil.getOutRelatedNodes( graphDb, attributeNode, ATTRIBUTE_DIRECT_MENTION_RELATION )
+                   .stream()
+                   .map( m -> createMention( graphDb, log, m ) )
+                   .filter( Objects::nonNull )
+                   .forEach( directEvidence::add );
+         attribute.setDirectEvidence( directEvidence );
+         final List<Mention> indirectEvidence = new ArrayList<>();
+         SearchUtil.getOutRelatedNodes( graphDb, attributeNode, ATTRIBUTE_INDIRECT_MENTION_RELATION )
+                   .stream()
+                   .map( m -> createMention( graphDb, log, m ) )
+                   .filter( Objects::nonNull )
+                   .forEach( indirectEvidence::add );
+         attribute.setIndirectEvidence( indirectEvidence );
+         final List<Mention> notEvidence = new ArrayList<>();
+         SearchUtil.getOutRelatedNodes( graphDb, attributeNode, ATTRIBUTE_NOT_MENTION_RELATION )
+                   .stream()
+                   .map( m -> createMention( graphDb, log, m ) )
+                   .filter( Objects::nonNull )
+                   .forEach( notEvidence::add );
+         attribute.setNotEvidence( notEvidence );
+         tx.success();
+         return attribute;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get attribute " + attributeNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
+
+
    /////////////////////////////////////////////////////////////////////////////////////////
    //
    //                            NOTE DATA
@@ -238,18 +416,11 @@ public enum NodeReader {
                                           final Log log,
                                           final Node mentionNode ) {
       try ( Transaction tx = graphDb.beginTx() ) {
-         final Mention mention = new Mention();
-         mention.setId( DataUtil.objectToString( mentionNode.getProperty( NAME_KEY ) ) );
-         mention.setClassUri( DataUtil.getUri( graphDb, mentionNode ) );
-         mention.setBegin( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_BEGIN ) ) );
-         mention.setEnd( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_END ) ) );
-         mention.setNegated( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_NEGATED ) ) );
-         mention.setUncertain( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_UNCERTAIN ) ) );
-         mention.setGeneric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_GENERIC ) ) );
-         mention.setConditional( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_CONDITIONAL ) ) );
-         mention.setHistoric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_HISTORIC ) ) );
-         mention.setTemporality( DataUtil.objectToString( mentionNode.getProperty( INSTANCE_TEMPORALITY ) ) );
-
+         final Mention mention = createMention( graphDb, log, mentionNode );
+         if ( mention == null ) {
+            tx.success();
+            return null;
+         }
          final FullMention fullMention = new FullMention( mention );
          for ( Relationship relation : mentionNode.getRelationships( Direction.OUTGOING ) ) {
             final String relationName = relation.getType().name();
@@ -277,6 +448,33 @@ public enum NodeReader {
       return null;
    }
 
+   private Mention createMention( final GraphDatabaseService graphDb,
+                                 final Log log,
+                                 final Node mentionNode ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Mention mention = new Mention();
+         mention.setId( DataUtil.objectToString( mentionNode.getProperty( NAME_KEY ) ) );
+         mention.setClassUri( DataUtil.getUri( graphDb, mentionNode ) );
+         mention.setBegin( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_BEGIN ) ) );
+         mention.setEnd( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_END ) ) );
+         mention.setNegated( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_NEGATED ) ) );
+         mention.setUncertain( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_UNCERTAIN ) ) );
+         mention.setGeneric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_GENERIC ) ) );
+         mention.setConditional( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_CONDITIONAL ) ) );
+         mention.setHistoric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_HISTORIC ) ) );
+         mention.setTemporality( DataUtil.objectToString( mentionNode.getProperty( INSTANCE_TEMPORALITY ) ) );
+         tx.success();
+         return mention;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get Mention " + mentionNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
 
    private List<Mention> getMentions( final Collection<FullMention> fullMentions ) {
       return fullMentions.stream()

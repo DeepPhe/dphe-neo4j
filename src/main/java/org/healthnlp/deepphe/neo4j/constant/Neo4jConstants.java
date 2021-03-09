@@ -41,6 +41,7 @@ final public class Neo4jConstants {
    static public final Label CANCER_LABEL = Label.label( "Cancer_Summary" );
    static public final Label TUMOR_LABEL = Label.label( "Tumor_Summary" );
    static public final Label FINDING_LABEL = Label.label( "Finding" );
+   static public final Label ATTRIBUTE_LABEL = Label.label( "Attribute" );
 
 
    static public final String SUBJECT_URI = "Subject";
@@ -58,6 +59,9 @@ final public class Neo4jConstants {
    static public final String TUMOR_SUMMARY_URI = "Tumor_Summary";
 
 //   static public final String FACT_URI = "Fact";
+
+   static public final String ATTRIBUTE_NAME = "Attribute_Name";
+   static public final String ATTRIBUTE_VALUE = "Attribute_Value";
 
    static public final String SOURCE_DATUM_URI = "Source_Datum";
    static public final String STRUCTURED_ENTRY_URI = "Structured_Entry";
@@ -93,11 +97,18 @@ final public class Neo4jConstants {
    static public final String SUBJECT_HAS_CANCER = "Subject_Has_Cancer";
    static public final String CANCER_HAS_TUMOR = "Cancer_Has_Tumor";
    //   static public final String CANCER_HAS_FACT = "Cancer_Has_Fact";
+   static public final String NEOPLASM_HAS_ATTRIBUTE = "Neoplasm_Has_Attribute";
+
 //   static public final String TUMOR_HAS_FACT = "Tumor_Has_Fact";
 //   static public final String FACT_HAS_STRUCTURED_ENTRY = "Fact_Has_Structured_Entry";
    static public final String FACT_HAS_TEXT_MENTION = "Fact_Has_Text_Mention";
    static public final String NOTE_HAS_TEXT_MENTION = "Note_Has_Text_Mention";
    //   static public final String FACT_HAS_RELATED_FACT = "Fact_Has_Related_Fact";
+
+   static public final String ATTRIBUTE_DIRECT_MENTION = "Attribute_Direct_Mention";
+   static public final String ATTRIBUTE_INDIRECT_MENTION = "Attribute_Indirect_Mention";
+   static public final String ATTRIBUTE_NOT_MENTION = "Attribute_Not_Mention";
+
    static public final String MENTION_COREF = "Mention_Coreferent";
    static public final String NOTE_HAS_SECTION = "Note_Has_Section";
 
@@ -110,12 +121,22 @@ final public class Neo4jConstants {
    static public final RelationshipType CANCER_HAS_TUMOR_RELATION = RelationshipType.withName( CANCER_HAS_TUMOR );
    //   static public final RelationshipType CANCER_HAS_FACT_RELATION = RelationshipType.withName( CANCER_HAS_FACT );
 //   static public final RelationshipType TUMOR_HAS_FACT_RELATION = RelationshipType.withName( TUMOR_HAS_FACT );
+   static public final RelationshipType NEOPLASM_HAS_ATTRIBUTE_RELATION
+         = RelationshipType.withName( NEOPLASM_HAS_ATTRIBUTE );
+
    static public final RelationshipType NOTE_HAS_TEXT_MENTION_RELATION
            = RelationshipType.withName( NOTE_HAS_TEXT_MENTION );
    static public final RelationshipType FACT_HAS_TEXT_MENTION_RELATION
            = RelationshipType.withName( FACT_HAS_TEXT_MENTION );
 //   static public final RelationshipType FACT_HAS_RELATED_FACT_RELATION
 //         = RelationshipType.withName( FACT_HAS_RELATED_FACT );
+
+   static public final RelationshipType ATTRIBUTE_DIRECT_MENTION_RELATION
+         = RelationshipType.withName( ATTRIBUTE_DIRECT_MENTION );
+   static public final RelationshipType ATTRIBUTE_INDIRECT_MENTION_RELATION
+         = RelationshipType.withName( ATTRIBUTE_INDIRECT_MENTION );
+   static public final RelationshipType ATTRIBUTE_NOT_MENTION_RELATION
+         = RelationshipType.withName( ATTRIBUTE_NOT_MENTION );
 
    //   static public final String FACT_RELATION_TYPE = "Fact_Relation_Type";
 //   static public final String SUMMARY_FACT_RELATION_TYPE = "Summary_Fact_Relation_Type";

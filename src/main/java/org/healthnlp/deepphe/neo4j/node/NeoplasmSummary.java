@@ -11,6 +11,8 @@ import java.util.List;
 public class NeoplasmSummary {
 
    private String id;
+   private String classUri;
+
    private String site_major;
    private String site_minor;
    private String site_related;
@@ -41,6 +43,14 @@ public class NeoplasmSummary {
 
    public void setId( final String id ) {
       this.id = id;
+   }
+
+   public String getClassUri() {
+      return classUri;
+   }
+
+   public void setClassUri( final String classUri ) {
+      this.classUri = classUri;
    }
 
    public List<NeoplasmAttribute> getAttributes() {
