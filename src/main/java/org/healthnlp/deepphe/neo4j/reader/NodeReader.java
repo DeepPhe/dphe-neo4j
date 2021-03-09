@@ -206,7 +206,7 @@ public enum NodeReader {
       try ( Transaction tx = graphDb.beginTx() ) {
          final NeoplasmAttribute attribute = new NeoplasmAttribute();
          attribute.setId( DataUtil.objectToString( attributeNode.getProperty( NAME_KEY ) ) );
-         attribute.setClassUri( DataUtil.getUri( graphDb, attributeNode ) );
+         attribute.setClassUri( DataUtil.objectToString( attributeNode.getProperty( ATTRIBUTE_URI ) ) );
          attribute.setName( DataUtil.objectToString( attributeNode.getProperty( ATTRIBUTE_NAME ) ) );
          attribute.setValue( DataUtil.objectToString( attributeNode.getProperty( ATTRIBUTE_VALUE ) ) );
          final List<Mention> directEvidence = new ArrayList<>();

@@ -1,22 +1,14 @@
 package org.healthnlp.deepphe.neo4j.writer;
 
-import com.google.gson.Gson;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
-import org.healthnlp.deepphe.neo4j.embedded.ShutdownHook;
 import org.healthnlp.deepphe.neo4j.node.*;
-import org.healthnlp.deepphe.neo4j.util.JsonUtil;
 import org.healthnlp.deepphe.neo4j.util.SearchUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
-import org.neo4j.procedure.Description;
-import org.neo4j.procedure.Mode;
-import org.neo4j.procedure.Name;
-import org.neo4j.procedure.Procedure;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
 
@@ -328,20 +320,14 @@ public enum NodeWriter {
          log.error( "No ID for Attribute " + attribute.getName() + " " + neoplasmId );
          return;
       }
-      final String uri = attribute.getClassUri();
-      if ( uri == null || uri.isEmpty() ) {
-         log.error( "No Class URI for Attribute " + id + " " + neoplasmId );
-         return;
-      }
-      final Node aClassNode = SearchUtil.getClassNode( graphDb, uri );
-      if ( aClassNode == null ) {
-         log.error( "Illegal Class URI for Attribute " + id + " " + uri );
-         return;
-      }
       final Node attributeNode = graphDb.createNode( ATTRIBUTE_LABEL );
       attributeNode.setProperty( NAME_KEY, id );
-      setInstanceOf( graphDb, log, attributeNode, aClassNode );
       createRelation( graphDb, log, neoplasmNode, attributeNode, NEOPLASM_HAS_ATTRIBUTE_RELATION );
+      final String uri = attribute.getClassUri();
+      if ( uri != null && !uri.isEmpty() ) {
+         // Setting the uri as a property vs. using an instance_of relation may speed up neo4j 'read' processes
+         attributeNode.setProperty( ATTRIBUTE_URI, uri );
+      }
       final String name = attribute.getName();
       if ( name != null && !name.isEmpty() ) {
          attributeNode.setProperty( ATTRIBUTE_NAME, name );

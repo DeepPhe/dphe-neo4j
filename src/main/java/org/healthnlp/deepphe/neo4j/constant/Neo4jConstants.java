@@ -62,6 +62,7 @@ final public class Neo4jConstants {
 
    static public final String ATTRIBUTE_NAME = "Attribute_Name";
    static public final String ATTRIBUTE_VALUE = "Attribute_Value";
+   static public final String ATTRIBUTE_URI = "Attribute_Uri";
 
    static public final String SOURCE_DATUM_URI = "Source_Datum";
    static public final String STRUCTURED_ENTRY_URI = "Structured_Entry";
