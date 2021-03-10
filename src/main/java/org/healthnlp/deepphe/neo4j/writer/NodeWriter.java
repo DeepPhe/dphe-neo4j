@@ -270,6 +270,45 @@ public enum NodeWriter {
       }
    }
 
+   public void addNeoplasmInfo( final GraphDatabaseService graphDb,
+                              final Log log,
+                              final String patientId,
+                              final NeoplasmSummary neoplasm ) {
+      final Node patientNode = getOrCreatePatientNode( graphDb, log, patientId );
+      if ( patientNode == null ) {
+         log.error( "No Patient Node for " + patientId );
+         return;
+      }
+      addNeoplasmInfo( graphDb, log, patientNode, neoplasm );
+   }
+
+   private void addNeoplasmInfo(  final GraphDatabaseService graphDb,
+                                final Log log,
+                                final Node patientNode,
+                                final NeoplasmSummary neoplasm ) {
+      final Node neoplasmNode = createNeoplasmNode( graphDb, log, CANCER_LABEL, neoplasm );
+      if ( neoplasmNode == null ) {
+         return;
+      }
+      try ( Transaction tx = graphDb.beginTx() ) {
+         createRelation( graphDb, log, patientNode, neoplasmNode, SUBJECT_HAS_CANCER_RELATION );
+//         final Collection<NeoplasmSummary> tumors = neoplasm.getTumors();
+//         for ( NeoplasmSummary tumor : tumors ) {
+//            final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, tumor );
+//            if ( tumorNode != null ) {
+//               createRelation( graphDb, log, cancerNode, tumorNode, CANCER_HAS_TUMOR_RELATION );
+//            }
+//         }
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+   }
+
    private Node createNeoplasmNode(  final GraphDatabaseService graphDb,
                                       final Log log,
                                       final Label neoplasmLabel,
