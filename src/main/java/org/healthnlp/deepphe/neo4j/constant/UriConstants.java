@@ -62,15 +62,14 @@ final public class UriConstants {
 
    static public final String NEOPLASM = "Neoplasm";
    // Neoplasm should have everything we want re tumor, cancer.  Neo disease is diseases (named) that have neoplasms.
-//   static public final String NEOPLASTIC_DISEASE = "Neoplastic_Syndrome";
 
    // The following refinements are under Neoplasm by Special Category, which is under Neoplasm
    static public final String BENIGN_NEOPLASM = "Benign_Neoplasm";
    static public final String MALIGNANT_NEOPLASM = "Malignant_Neoplasm";
    static public final String PRIMARY_NEOPLASM = "Primary_Neoplasm";
    static public final String METASTATIC_NEOPLASM = "Secondary_Neoplasm";
-   //   static public final String UNCERTAIN_NEOPLASM_1 = "Neoplasm_of_Uncertain_Malignant_Potential";
-//   static public final String UNCERTAIN_NEOPLASM_2 = "Neoplasm__Uncertain_Whether_Benign_or_Malignant";
+   static public final String METASTASIS = "Metastasis";
+
    static public final String IN_SITU_NEOPLASM = "In_Situ_Neoplasm";
    static public final String RECURRENT_TUMOR = "Recurrent_Tumor";
 
@@ -208,51 +207,28 @@ final public class UriConstants {
 
    ////  Subclass of "Disease_Disorder_or_Finding"
    // Semantic Type "Neoplastic Process"
-//   static public final String NEOPLASM = DPHE_ROOT_HASH + "Neoplasm";
    static public final String BREAST_NEOPLASM = "Breast_Neoplasm";
    static public final String SKIN_NEOPLASM = "Skin_Neoplasm";
-//   static public final String MALIGNANT_NEOPLASM = DPHE_ROOT_HASH + "Malignant_Neoplasm";
    // Semantic Type "Neoplastic Process"
 
-   //   // Tumor is now Tumor_Mass, under Mass
-//   // Only Generic and Pathologic are split into actual scores.  May need old dphe addition.
-//   // Semantic Type "Laboratory or Test Result"
-//
-//   // Semantic Type "Finding"
-//   static public final String TRIPLE_NEGATIVE = "Triple_Negative_Breast_Cancer_Finding";
-   //
-//   //  Cancer Stage is (antiquated) in ncit and a time.  Need to find the parent of "Stage_IIA"
-//   static public final String STAGE = DPHE_ROOT_HASH + "Cancer_Stage";
    static public final String STAGE = "Tumor_Stage_Finding";
    static public final String STAGE_UNKNOWN = "Stage_Unknown";
-//
-//   // main branch roots
-//   static public final String ANATOMY = DPHE_ROOT_HASH + "Anatomic_Structure_System_or_Substance";
-//   static public final String[] ANATOMIES = {
-//         "Organ",
-//         "Body_Part",
-//         "Body_Region",
-//         "Abdomen",
-//         "Pelvis"
-//   };
 
    static public final String LYMPH_NODE = "Lymph_Node";
 
    // Semantic Type "Body Part, Organ, or Organ Component".  Parent of "Left_Breast", "Right_Breast".
    static public final String BREAST = "Breast";
    // Parent of quadrants "#Central_Portion_of_the_Breast" , "#Lower_Inner_Quadrant_of_the_Breast", etc. also "#Nipple"
-   static public final String QUADRANT = "Quadrant_of_Breast";
+//   static public final String QUADRANT = "Quadrant_of_Breast";
+   static public final String QUADRANT = "Breast_Quadrant";
    static public final String BREAST_PART = "Breast_Part";
    // Semantic Type "Intellectual Product".  Has no children ... either dPhe import or use time annotation or something.
    static public final String CLOCKFACE = "Clockface_Position";
 
    // Semantic Type "Anatomical Structure".  Parent of many Skin classes.
-//   static public final String SKIN = DPHE_ROOT_HASH + "Skin";
 
    //// Subclass of "Drug_Food_Chemical_or_Biomedical_Material"
    // Semantic Type "Pharmacological Substance"
-
-
 
    //// Subclass of "Conceptual_Entity"
    // Semantic Type "Event"
@@ -260,11 +236,6 @@ final public class UriConstants {
 
    //// Subclass of "Biological_Process" and later "Tumor_Associated_Process"
    // Semantic Type "Pathologic Function"
-   static public final String METASTASIS = "Secondary_Neoplasm";
-//   static public final String BENIGN_NEOPLASM =  "Benign_Neoplasm";
-
-//   static public final String BODY_MODIFIER =  "Body_Modifier";
-
 
    //// Subclass of "Disease_Morphology_Qualifier"
    // Semantic Type "Qualitative Concept"
@@ -321,6 +292,13 @@ final public class UriConstants {
       initializeUris( graphDb );
       return PRIMARY_URIS;
    }
+
+   static private final Collection<String> MALIGNANT_URIS = new HashSet<>();
+   static public Collection<String> getMalignantTumorUris( final GraphDatabaseService graphDb ) {
+      initializeUris( graphDb );
+      return MALIGNANT_URIS;
+   }
+
 
    static private final Collection<String> METASTASIS_URIS = new HashSet<>();
 
@@ -384,36 +362,6 @@ final public class UriConstants {
       return HIGH_VALUE_URIS;
    }
 
-
-//   static private final Collection<String> ANATOMY_URIS = new HashSet<>();
-
-//   static public Collection<String> getAnatomyUris( final GraphDatabaseService graphDb ) {
-//      initializeUris( graphDb );
-//      return ANATOMY_URIS;
-//   }
-//
-//   static private final Collection<String> BODY_CAVITY_URIS = new HashSet<>();
-//
-//   static public Collection<String> getBodyCavityUris( final GraphDatabaseService graphDb ) {
-//      initializeUris( graphDb );
-//      return BODY_CAVITY_URIS;
-//   }
-//
-//   static private final Collection<String> UNWANTED_ANATOMY_URIS = new HashSet<>();
-//
-//   static public Collection<String> getUnwantedAnatomyUris( final GraphDatabaseService graphDb ) {
-//      initializeUris( graphDb );
-//      return UNWANTED_ANATOMY_URIS;
-//   }
-//
-//   static private final Collection<String> UNWANTED_TISSUE_URIS = new HashSet<>();
-//
-//   static public Collection<String> getUnwantedTissueUris( final GraphDatabaseService graphDb ) {
-//      initializeUris( graphDb );
-//      return UNWANTED_TISSUE_URIS;
-//   }
-
-   //   static public final String HISTOLOGY = "Histologic_Type";
    static private final Map<String, Collection<String>> HISTOLOGY_MAP = new HashMap<>();
 
    static public Map<String, Collection<String>> getHistologyMap( final GraphDatabaseService graphDb ) {
@@ -458,40 +406,21 @@ final public class UriConstants {
       synchronized ( URI_LOCK ) {
          if ( MASS_URIS.isEmpty() ) {
 
-//            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Primary_Lesion" ) );
-//            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Primary_Lesion" ) );
-//
-//            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
-//            PRIMARY_URIS.removeAll( METASTASIS_URIS );
-//
-//            GENERIC_TUMOR_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
-//            GENERIC_TUMOR_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
-//            GENERIC_TUMOR_URIS.removeAll( PRIMARY_URIS );
-//            GENERIC_TUMOR_URIS.removeAll( METASTASIS_URIS );
-//
-//            TUMOR_URIS.addAll( PRIMARY_URIS );
-//            TUMOR_URIS.addAll( METASTASIS_URIS );
-//            TUMOR_URIS.addAll( GENERIC_TUMOR_URIS );
-
             // v4
             MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
 
             NEOPLASM_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
-//            NEOPLASM_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASTIC_DISEASE ) );
 
             MASS_NEOPLASMS.addAll( MASS_URIS );
             MASS_NEOPLASMS.addAll( NEOPLASM_URIS );
 
+            MALIGNANT_URIS.addAll( SearchUtil.getBranchUris( graphDb, MALIGNANT_NEOPLASM ) );
             BENIGN_URIS.addAll( SearchUtil.getBranchUris( graphDb, BENIGN_NEOPLASM ) );
-            // values for Neoplastic_Status are "Benign" and "Malignant"
-//            BENIGN_TUMOR_URIS.addAll( SearchUtil.getBranchUrisWithAttribute( graphDb, MASS, "Neoplastic_Status", "Benign" ) );
-//            BENIGN_TUMOR_URIS.addAll( SearchUtil.getBranchUrisWithAttribute( graphDb, NEOPLASM, "Neoplastic_Status", "Benign" ) );
-
             PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, PRIMARY_NEOPLASM ) );
-//            PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASTIC_DISEASE ) );
             PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Primary_Lesion" ) );
             PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Primary_Lesion" ) );
 
+            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTATIC_NEOPLASM ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Secondary_Lesion" ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Metastatic_Lesion" ) );
@@ -499,21 +428,11 @@ final public class UriConstants {
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Metastatic_Lesion" ) );
             PRIMARY_URIS.removeAll( METASTASIS_URIS );
 
-//            GENERIC_TUMOR_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
-//            GENERIC_TUMOR_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
-//            GENERIC_TUMOR_URIS.add( "Ovarian_Mass" );
             GENERIC_URIS.addAll( NEOPLASM_URIS );
+            GENERIC_URIS.removeAll( MALIGNANT_URIS );
             GENERIC_URIS.removeAll( BENIGN_URIS );
             GENERIC_URIS.removeAll( PRIMARY_URIS );
             GENERIC_URIS.removeAll( METASTASIS_URIS );
-
-//            TUMOR_URIS.addAll( BENIGN_URIS );
-//            TUMOR_URIS.addAll( PRIMARY_URIS );
-//            TUMOR_URIS.addAll( METASTASIS_URIS );
-//            TUMOR_URIS.addAll( GENERIC_TUMOR_URIS );
-
-//            CANCER_URIS.addAll( SearchUtil.getBranchUris( graphDb, MALIGNANT_NEOPLASM ) );
-//            CANCER_URIS.removeAll( TUMOR_URIS );
 
             CANCER_TYPE_MAP.put( "Carcinoma", SearchUtil.getBranchUris( graphDb, "Carcinoma" ) );
             CANCER_TYPE_MAP.put( "Sarcoma", SearchUtil.getBranchUris( graphDb, "Sarcoma" ) );
@@ -561,47 +480,9 @@ final public class UriConstants {
                   .getBranchUris( graphDb, "Undifferentiated_Ovarian_Carcinoma" ) );
             HISTOLOGY_MAP.put( "Yolk_Sac", SearchUtil.getBranchUris( graphDb, "Yolk_Sac_Tumor" ) );
 
-
-//            Arrays.stream( ANATOMIES )
-//                  .map( u -> SearchUtil.getBranchUris( graphDb, u ) )
-//                  .forEach( ANATOMY_URIS::addAll );
-
-//            BODY_CAVITY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Body_Cavity" ) );
-
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Anatomic_Border" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Cell_Part" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Soft_Tissue" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Gland" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Blood_Brain_Barrier" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Abnormal_Cell" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Microanatomic_Structure" ) );
-//
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Skin" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
-//
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Other_Anatomic_Concept" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Body_Fluid_or_Substance" ) );
-////            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Disorder_by_Site" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Lung_Lobe" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Respiratory_System_Disorder" ) );
-//            UNWANTED_ANATOMY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Gene_Product" ) );
-//
-//            UNWANTED_ANATOMY_URIS.add( "Pyloric_Stenosis" ); // Errantly under Stomach
-//            UNWANTED_ANATOMY_URIS.add( "Parenchyma" );
-//
-//            UNWANTED_ANATOMY_URIS.remove( "Scalp" );
-//            UNWANTED_ANATOMY_URIS.remove( "Prostate_Gland" );
-//            UNWANTED_ANATOMY_URIS.remove( "Lung" );
-//            UNWANTED_ANATOMY_URIS.remove( "Liver" );
-
-
-//            ANATOMY_URIS.removeAll( UNWANTED_ANATOMY_URIS );
-
-
 //            DIAGNOSIS_GROUP_NAMES
             final Collection<String> sites = getChildren( graphDb, "Neoplasm_by_Site" );
             final Collection<String> morphs = getChildren( graphDb,"Neoplasm_by_Morphology" );
-//            final Collection<String> specials = getChildren( graphDb,"Neoplasm_by_Morphology" );
             final Collection<String> masses = getChildren( graphDb, MASS );
 
             for ( String mass : masses ) {
@@ -613,14 +494,6 @@ final public class UriConstants {
                }
                DIAGNOSIS_GROUP_NAMES.put( MASS, MASS );
             }
-//            for ( String special : specials ) {
-//               final String groupText = SearchUtil.getPreferredText( graphDb, special );
-//               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, special );
-//               for ( String node : branch ) {
-//                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
-//                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
-//               }
-//            }
             for ( String morph : morphs ) {
                final String groupText = SearchUtil.getPreferredText( graphDb, morph );
                final Collection<String> branch = SearchUtil.getBranchUris( graphDb, morph );

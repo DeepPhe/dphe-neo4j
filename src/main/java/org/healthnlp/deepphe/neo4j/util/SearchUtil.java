@@ -272,6 +272,7 @@ final public class SearchUtil {
                                                     .nodes()
                                                     .stream()
                                                     .map( n -> n.getProperty( NAME_KEY ) )
+                                                    .filter( Objects::nonNull )
                                                     .map( Object::toString )
                                                     .collect( Collectors.toSet() );
          tx.success();
@@ -307,6 +308,7 @@ final public class SearchUtil {
                                                   .nodes()
                                                   .stream()
                                                   .map( n -> n.getProperty( NAME_KEY ) )
+                                                  .filter( Objects::nonNull )
                                                   .map( Object::toString )
                                                   .collect( Collectors.toSet() );
          tx.success();
@@ -356,6 +358,7 @@ final public class SearchUtil {
                           .stream()
                           .filter( n -> hasTarget( n.getRelationships( Direction.OUTGOING, relation ), targetNode ) )
                           .map( n -> n.getProperty( NAME_KEY ) )
+                          .filter( Objects::nonNull )
                           .map( Object::toString )
                           .collect( Collectors.toSet() );
          tx.success();
@@ -389,6 +392,7 @@ final public class SearchUtil {
                           .stream()
                           .filter( n -> n.getProperty( attributeName, "" ).equals( value ) )
                           .map( n -> n.getProperty( NAME_KEY ) )
+                          .filter( Objects::nonNull )
                           .map( Object::toString )
                           .collect( Collectors.toSet() );
          tx.success();
