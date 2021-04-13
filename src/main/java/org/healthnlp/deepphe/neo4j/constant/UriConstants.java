@@ -91,6 +91,8 @@ final public class UriConstants {
    static public final String C_TNM = "Generic_TNM";
    static public final String P_TNM = "Pathologic_TNM";
 
+   static public final String BIOMARKER = "Tumor_Biomarkers";
+
    //nMaybe migrate to Lab Result
    static public final String RECEPTOR_STATUS = "Receptor_Status";
    static public final String ER_STATUS = "Estrogen_Receptor_Status";

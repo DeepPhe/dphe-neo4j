@@ -234,7 +234,7 @@ public enum NodeWriter {
    public void addCancerInfo( final GraphDatabaseService graphDb,
                                final Log log,
                               final String patientId,
-                              final CancerSummary cancer ) {
+                              final NeoplasmSummary cancer ) {
       final Node patientNode = getOrCreatePatientNode( graphDb, log, patientId );
       if ( patientNode == null ) {
          log.error( "No Patient Node for " + patientId );
@@ -246,14 +246,14 @@ public enum NodeWriter {
    private void addCancerInfo(  final GraphDatabaseService graphDb,
                               final Log log,
                               final Node patientNode,
-                                final CancerSummary cancer ) {
+                                final NeoplasmSummary cancer ) {
       final Node cancerNode = createNeoplasmNode( graphDb, log, CANCER_LABEL, cancer );
       if ( cancerNode == null ) {
          return;
       }
       try ( Transaction tx = graphDb.beginTx() ) {
          createRelation( graphDb, log, patientNode, cancerNode, SUBJECT_HAS_CANCER_RELATION );
-         final Collection<NeoplasmSummary> tumors = cancer.getTumors();
+         final Collection<NeoplasmSummary> tumors = cancer.getSubSummaries();
          for ( NeoplasmSummary tumor : tumors ) {
             final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, tumor );
             if ( tumorNode != null ) {

@@ -130,10 +130,10 @@ public enum NodeReader {
       return cancers;
    }
 
-   private CancerSummary createCancer( final GraphDatabaseService graphDb,
+   private NeoplasmSummary createCancer( final GraphDatabaseService graphDb,
                             final Log log,
                             final Node cancerNode ) {
-      final CancerSummary cancer = new CancerSummary();
+      final NeoplasmSummary cancer = new NeoplasmSummary();
       try ( Transaction tx = graphDb.beginTx() ) {
          populateNeoplasm( graphDb, log, cancer, cancerNode );
          final List<NeoplasmSummary> tumors = new ArrayList<>();
@@ -142,7 +142,7 @@ public enum NodeReader {
                    .map( t -> populateNeoplasm( graphDb, log, new NeoplasmSummary(), t ) )
                    .filter( Objects::nonNull )
                    .forEach( tumors::add );
-         cancer.setTumors( tumors );
+         cancer.setSubSummaries( tumors );
          tx.success();
          return cancer;
       } catch ( TransactionFailureException txE ) {
