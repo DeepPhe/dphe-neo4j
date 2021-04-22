@@ -148,7 +148,7 @@ public enum NodeReader {
         return cancers;
     }
 
-    private CancerSummary createCancer(final GraphDatabaseService graphDb,
+    private NeoplasmSummary createCancer(final GraphDatabaseService graphDb,
                                        final Log log,
                                        final Node cancerNode) {
         final CancerSummary cancer = new CancerSummary();
@@ -173,6 +173,31 @@ public enum NodeReader {
         }
         return null;
     }
+   private NeoplasmSummary createCancer( final GraphDatabaseService graphDb,
+                            final Log log,
+                            final Node cancerNode ) {
+      final NeoplasmSummary cancer = new NeoplasmSummary();
+      try ( Transaction tx = graphDb.beginTx() ) {
+         populateNeoplasm( graphDb, log, cancer, cancerNode );
+         final List<NeoplasmSummary> tumors = new ArrayList<>();
+         SearchUtil.getOutRelatedNodes( graphDb, cancerNode, CANCER_HAS_TUMOR_RELATION )
+                   .stream()
+                   .map( t -> populateNeoplasm( graphDb, log, new NeoplasmSummary(), t ) )
+                   .filter( Objects::nonNull )
+                   .forEach( tumors::add );
+         cancer.setSubSummaries( tumors );
+         tx.success();
+         return cancer;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get cancer " + cancerNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
 
     private NeoplasmSummary populateNeoplasm(final GraphDatabaseService graphDb,
                                              final Log log,
@@ -296,7 +321,7 @@ public enum NodeReader {
     }
 
 
-    private List<Note> getNotes(final GraphDatabaseService graphDb,
+   private List<Note> getNotes( final GraphDatabaseService graphDb,
                                 final Log log,
                                 final Node patientNode) {
         final List<Note> notes = new ArrayList<>();
@@ -348,11 +373,11 @@ public enum NodeReader {
     }
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //                            SECTION DATA
-    //
-    /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            SECTION DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
 
 
     public List<Section> getSections(final GraphDatabaseService graphDb,
