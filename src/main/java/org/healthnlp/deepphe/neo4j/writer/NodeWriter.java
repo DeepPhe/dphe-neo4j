@@ -234,7 +234,7 @@ public enum NodeWriter {
    public void addCancerInfo( final GraphDatabaseService graphDb,
                                final Log log,
                               final String patientId,
-                              final CancerSummary cancer ) {
+                              final NeoplasmSummary cancer ) {
       final Node patientNode = getOrCreatePatientNode( graphDb, log, patientId );
       if ( patientNode == null ) {
          log.error( "No Patient Node for " + patientId );
@@ -246,22 +246,23 @@ public enum NodeWriter {
    private void addCancerInfo(  final GraphDatabaseService graphDb,
                               final Log log,
                               final Node patientNode,
-                                final CancerSummary cancer ) {
+                                final NeoplasmSummary cancer ) {
       final Node cancerNode = createNeoplasmNode( graphDb, log, CANCER_LABEL, cancer );
       if ( cancerNode == null ) {
          return;
       }
       try ( Transaction tx = graphDb.beginTx() ) {
          createRelation( graphDb, log, patientNode, cancerNode, SUBJECT_HAS_CANCER_RELATION );
-         final Collection<NeoplasmSummary> tumors = cancer.getTumors();
-         for ( NeoplasmSummary tumor : tumors ) {
-            final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, tumor );
+         //ask sean...what do do about this getTumors?  I made my own cancersummary but i'm reverting for a bit
+
+            final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, cancer );
             if ( tumorNode != null ) {
                createRelation( graphDb, log, cancerNode, tumorNode, CANCER_HAS_TUMOR_RELATION );
             }
-         }
          tx.success();
-      } catch ( TransactionFailureException txE ) {
+         }
+
+       catch ( TransactionFailureException txE ) {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
