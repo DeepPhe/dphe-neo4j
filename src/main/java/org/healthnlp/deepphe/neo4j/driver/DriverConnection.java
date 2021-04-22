@@ -27,6 +27,7 @@ public enum DriverConnection {
       if ( url.equals( "Local" ) && user.equals( "Me" ) && pass.equals( "None" ) ) {
          return null;
       }
+
       _driver = DriverFactory.createDriver( url, user, pass );
       _url = url;
       return _driver;

@@ -140,6 +140,23 @@ final public class DataUtil {
         return "";
     }
 
+    public static String safeGetProperty(final Node node, final String propertyName, final String defaultValue) {
+        try {
+            if (node.hasProperty(propertyName)) {
+                Object value = node.getProperty(propertyName);
+                String stringValue = value.toString();
+                return stringValue;
+            } else {
+                return defaultValue;
+            }
+        } catch (Exception e) {
+            // log.error(e.getMessage());
+            throw e;
+        }
+
+
+    }
+
     static public String getUri( final GraphDatabaseService graphDb, final Node node ) {
         try ( Transaction tx = graphDb.beginTx() ) {
             final Node typeClass = getInstanceClass( graphDb, node );
