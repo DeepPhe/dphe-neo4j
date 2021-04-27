@@ -27,6 +27,58 @@ public enum NodeReader {
 
    /////////////////////////////////////////////////////////////////////////////////////////
    //
+   //                            COHORT DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
+
+
+   public List<PatientDiagnosis> getPatientDiagnoses( final GraphDatabaseService graphDb,
+                                                      final Log log ) {
+      final List<PatientDiagnosis> diagnoses = new ArrayList<>();
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Node allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         if ( allPatientsNode == null ) {
+            log.error(
+                  "No class node for uri " + PATIENT_URI + ".  Cannot find patients in graph." );
+            tx.success();
+            return null;
+         }
+         SearchUtil.getOutRelatedNodes( graphDb, allPatientsNode, IS_A_RELATION )
+                   .stream()
+                   .map( n -> createPatientDiagnoses( graphDb, log, n ) )
+                   .filter( Objects::nonNull )
+                   .forEach( diagnoses::addAll );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get diagnoses from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return diagnoses;
+   }
+
+   private List<PatientDiagnosis> createPatientDiagnoses( final GraphDatabaseService graphDb,
+                                         final Log log,
+                                         final Node patientNode ) {
+      final String patientId = DataUtil.objectToString( patientNode.getProperty( NAME_KEY ) );
+      return getCancers( graphDb, log, patientNode ).stream()
+                                             .map( c -> createPatientDiagnosis( patientId, c ) )
+                                             .collect( Collectors.toList() );
+   }
+
+   static private PatientDiagnosis createPatientDiagnosis( final String patientId, final NeoplasmSummary cancer ) {
+      final PatientDiagnosis diagnosis = new PatientDiagnosis();
+      diagnosis.setPatientId( patientId );
+      diagnosis.setClassUri( cancer.getClassUri() );
+      return diagnosis;
+   }
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
    //                            PATIENT DATA
    //
    /////////////////////////////////////////////////////////////////////////////////////////
