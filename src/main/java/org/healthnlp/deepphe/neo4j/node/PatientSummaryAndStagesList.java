@@ -15,5 +15,5 @@ public class PatientSummaryAndStagesList {
         this.patientSummaryAndStages = patientSummaryAndStages;
     }
 
-    List<PatientSummaryAndStages> patientSummaryAndStages;
+    List<PatientInfoAndStages> patientSummaryAndStages;
 }

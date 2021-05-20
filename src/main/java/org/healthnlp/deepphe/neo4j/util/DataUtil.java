@@ -374,6 +374,11 @@ final public class DataUtil {
     // Convert note date / time string in format yyyyMMddhhmm to yyyy/mm/dd
     // viz wants only the date part
     static public String getReportDate( final String compactDate ) {
+        if (compactDate.startsWith(NOTE_DATE)) {
+            //JDL: hacky?  if the date, very specifically, begins with "Note_Date" then lets assume it's a more
+            //specific error (e.g. "Note_Date_property_not_found") and move on.
+            return compactDate;
+        }
         if ( compactDate.length() != 12 ) {
             return "1999/01/01";
         }

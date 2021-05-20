@@ -1,9 +1,6 @@
 package org.healthnlp.deepphe.neo4j.node;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class PatientSummaryAndStages {
+public class PatientInfo {
     private String patientId;
     private String patientName;
     private String birthDate;
@@ -11,17 +8,23 @@ public class PatientSummaryAndStages {
     private String firstEncounterAge;
     private String lastEncounterDate;
     private String getFirstEncounterDate;
-    private List<String> stages;
 
-    public List<String> getStages() {
-        if (stages == null) {
-            stages = new ArrayList<>();
-        }
-        return stages;
+    public String getGender() {
+        return gender;
     }
 
-    public void setStages(List<String> stages) {
-        this.stages = stages;
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    private String gender;
+
+    public String getPatientId() {
+        return patientId;
+    }
+
+    public void setPatientId(String patientId) {
+        this.patientId = patientId;
     }
 
     public String getPatientName() {
@@ -30,6 +33,14 @@ public class PatientSummaryAndStages {
 
     public void setPatientName(String patientName) {
         this.patientName = patientName;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
     }
 
     public String getLastEncounterAge() {
@@ -56,14 +67,6 @@ public class PatientSummaryAndStages {
         this.lastEncounterDate = lastEncounterDate;
     }
 
-    public String getPatientId() {
-        return patientId;
-    }
-
-    public void setPatientId(String patientId) {
-        this.patientId = patientId;
-    }
-
     public String getGetFirstEncounterDate() {
         return getFirstEncounterDate;
     }
@@ -71,14 +74,4 @@ public class PatientSummaryAndStages {
     public void setGetFirstEncounterDate(String getFirstEncounterDate) {
         this.getFirstEncounterDate = getFirstEncounterDate;
     }
-
-    public String getBirthDate() {
-        return birthDate;
-    }
-
-    public void setBirthDate(String birthDate) {
-        this.birthDate = birthDate;
-    }
-
-
 }

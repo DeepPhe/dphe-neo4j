@@ -1,9 +1,11 @@
 package org.healthnlp.deepphe.neo4j.reader;
 
 
+import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.node.*;
 import org.healthnlp.deepphe.neo4j.util.DataUtil;
 import org.healthnlp.deepphe.neo4j.util.SearchUtil;
+import org.healthnlp.deepphe.neo4j.util.TextFormatter;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
@@ -12,8 +14,7 @@ import java.util.stream.Collectors;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
 import static org.healthnlp.deepphe.neo4j.constant.RelationConstants.HAS_STAGE;
-import static org.healthnlp.deepphe.neo4j.constant.UriConstants.STAGE;
-import static org.healthnlp.deepphe.neo4j.util.DataUtil.adjustPropertyName;
+import static org.healthnlp.deepphe.neo4j.constant.RelationConstants.HAS_TUMOR_TYPE;
 import static org.healthnlp.deepphe.neo4j.util.DataUtil.safeGetProperty;
 
 /**
@@ -525,7 +526,33 @@ public enum NodeReader {
         return corefs;
     }
 
-    static private PatientSummaryAndStages createSharedPatientProperties( final Node patientNode ) {
+
+    static private PatientInfo createPatientInfo(final Node patientNode) throws RuntimeException {
+        PatientInfo patientInfo = new PatientInfo();
+
+        String patientId = DataUtil.objectToString( patientNode.getProperty( NAME_KEY ) );
+        if (patientId == null) {
+            //unrecoverable error?
+            throw new RuntimeException("Node supplied to createSharedPatientProperties does not contain required property: " + NAME_KEY);
+        }
+
+        String nameValue = safeGetProperty(patientNode, PATIENT_NAME, PATIENT_NAME + "_property_not_found");
+        String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
+        String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, PATIENT_BIRTH_DATE + "_property_not_found");
+        String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, PATIENT_DEATH_DATE + "_property_not_found");
+
+        patientInfo.setPatientId(patientId);
+        patientInfo.setPatientName(nameValue);
+        patientInfo.setGender(genderValue);
+        patientInfo.setBirthDate(birthValue);
+
+        return patientInfo;
+
+    }
+
+    //TODO: throwing generic exception, make it more specific
+    static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode ) {
+
 
 
 
@@ -541,7 +568,7 @@ public enum NodeReader {
         String firstEncounterAge = "15";
         String lastEncounterAge = "37";
 
-        PatientSummaryAndStages patientSummaryAndStages = new PatientSummaryAndStages();
+        PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
         //patientSummaryAndStages.setPatientId(); how?
         patientSummaryAndStages.setPatientName(nameValue);
         patientSummaryAndStages.setBirthDate(birthValue);
@@ -582,7 +609,7 @@ public enum NodeReader {
             // DataUtil.getAllPatientNodes() is supposed to return all unique patients
             final Collection<Node> patientNodes = DataUtil.getAllPatientNodes( graphDb );
             for ( Node patientNode : patientNodes ) {
-                PatientSummaryAndStages patientSummaryAndStages = createSharedPatientProperties( patientNode );
+                PatientInfoAndStages patientSummaryAndStages = createSharedPatientProperties( patientNode );
 
 
           if ( includeStages ) {
@@ -628,6 +655,198 @@ public enum NodeReader {
         return patientSummaryAndStagesList;
     }
 
+    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+        NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
+        List<NewCancerSummary> cancers = new ArrayList<>();
+        newCancerAndTumorSummary.setCancers(cancers);
+        //final List<Map<String, Object>> cancers = new ArrayList<>();
+        try ( Transaction tx = graphDb.beginTx() ) {
+            final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
+            if ( patientNode == null ) {
+                tx.success();
+                return newCancerAndTumorSummary;
+            }
+            final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes( graphDb, patientNode,
+                    SUBJECT_HAS_CANCER_RELATION );
+            for ( Node cancerNode : cancerNodes ) {
+                // Cancer summary
+                //final Map<String, Object> cancer = new HashMap<>();
+                NewCancerSummary newCancerSummary = new NewCancerSummary();
+                final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
+                newCancerSummary.setCancerId(cancerId);
+                // Add to cancer map
+                //cancer.put( "cancerId", cancerId );
+                //final List<Map> cancerFacts = new ArrayList<>();
+                final List<NewCancerFact> cancerFacts = new ArrayList<>();
+                for ( Relationship relation : cancerNode.getRelationships( Direction.OUTGOING ) ) {
+                    NewCancerFact newCancerFact = new NewCancerFact();
+                    NewCancerFactInfo newCancerFactInfo = new NewCancerFactInfo();
+                    // final Map<String, Object> cancerFact = new HashMap<>();
+                    // final Map<String, Object> cancerFactInfo = new HashMap<>();
+                    final String cancerFactRelationName = relation.getType()
+                            .name();
+                    if ( cancerFactRelationName.equals( INSTANCE_OF )
+                            || cancerFactRelationName.equals( CANCER_HAS_TUMOR )
+                            || cancerFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+                        continue;
+                    }
+                    newCancerFact.setRelation(cancerFactRelationName);
+                    //cancerFact.put( "relation", cancerFactRelationName );
+                    newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName( cancerFactRelationName ) );
+
+                    //cancerFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( cancerFactRelationName ) );
+                    final Node targetNode = relation.getOtherNode( cancerNode );
+                    final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+                    if (classNode != null) {
+                        final String classId = DataUtil.objectToString(classNode.getProperty(NAME_KEY));
+                        //cancerFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
+                        //cancerFactInfo.put( "name", classId );
+                        newCancerFactInfo.setId(DataUtil.objectToString(targetNode.getProperty(NAME_KEY)));
+                        newCancerFactInfo.setName(classId);
+
+                        if (HAS_STAGE.equals(cancerFactRelationName)) {
+                            newCancerFactInfo.setPrettyName(TextFormatter.toPrettyStage(classId));
+                            //cancerFactInfo.put( "prettyName", TextFormatter.toPrettyStage( classId ) );
+                        } else {
+                            newCancerFactInfo.setPrettyName(DataUtil.objectToString(classNode.getProperty(PREF_TEXT_KEY)));
+                            //cancerFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+                        }
+                    } else {
+                        newCancerFactInfo.setId("jdl-junk-id");
+                        newCancerFactInfo.setName("jdl-junk-cancer-fact-info-name");
+                        newCancerFactInfo.setPrettyName("jdl-junk-cancer-fact-info-prettyname");
+                        System.out.println("Unable to find targetNode: " + targetNode);
+                        System.out.println("Cancer fact relation name: " +cancerFactRelationName);
+                        System.out.println("TargetNode name"+ targetNode.getProperty(NAME_KEY));
+                    }
+
+                    // Add fact to cancerFact map
+                    //cancerFact.put( "cancerFactInfo", cancerFactInfo );
+                    newCancerFact.setCancerFactInfo(newCancerFactInfo);
+                    // Add to list
+                    //cancerFacts.add( cancerFact );
+                    cancerFacts.add(newCancerFact);
+                }
+                // Add to cancer map
+                newCancerSummary.setCancerFacts( cancerFacts );
+                // Tumor summary
+                //final List<Map<String, Object>> tumors = new ArrayList<>();
+                final List<NewTumorSummary> tumors = new ArrayList<>();
+                final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes( graphDb, cancerNode,
+                        CANCER_HAS_TUMOR_RELATION );
+                if (tumorNodes.size() == 0) {
+                    System.out.println("tumorNodes not found");
+                }
+                for ( Node tumorNode : tumorNodes ) {
+                    //final Map<String, Object> tumor = new HashMap<>();
+                    NewTumorSummary newTumorSummary = new NewTumorSummary();
+                    final String tumorId = DataUtil.objectToString( tumorNode.getProperty( NAME_KEY ) );
+                    // Add tumorId
+                    // tumor.put( "tumorId", tumorId );
+                    newTumorSummary.setTumorId(tumorId);
+
+                    //tumor.put( HAS_TUMOR_TYPE, DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE ) ) );
+                    newTumorSummary.setHasTumorType(DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE )));
+                    //final List<Map<String, Object>> tumorFacts = new ArrayList<>();
+                    List<NewTumorFact> tumorFacts =  new ArrayList<>();
+                    for ( Relationship relation : tumorNode.getRelationships( Direction.OUTGOING ) ) {
+                        //final Map<String, Object> tumorFact = new HashMap<>();
+                        //final Map<String, Object> tumorFactInfo = new HashMap<>();
+                        final String tumorFactRelationName = relation.getType()
+                                .name();
+                        if ( tumorFactRelationName.equals( INSTANCE_OF )
+                                || tumorFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+                            continue;
+                        }
+                        NewTumorFact tumorFact = new NewTumorFact();
+                        //tumorFact.put( "relation", tumorFactRelationName );
+                        tumorFact.setRelation(tumorFactRelationName);
+
+                        //tumorFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( tumorFactRelationName ) );
+                        tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName( tumorFactRelationName ));
+                        final Node targetNode = relation.getOtherNode( tumorNode );
+                        final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+                        final String classId = DataUtil.objectToString( classNode.getProperty( NAME_KEY ) );
+                        NewCancerFactInfo tumorFactInfo = new NewCancerFactInfo();
+                        //tumorFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
+                        tumorFactInfo.setId(DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ));
+                        //tumorFactInfo.put( "name", classId );
+                        tumorFactInfo.setName(classId);
+                        //tumorFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+                        tumorFactInfo.setPrettyName(DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ));
+                        // Add fact to tumorFact map
+                        //tumorFact.put( "tumorFactInfo", tumorFactInfo );
+                        tumorFact.setTumorFactInfo(tumorFactInfo);
+                        // Add to list
+                        tumorFacts.add( tumorFact );
+                    }
+                    // Add tumorId
+                    newTumorSummary.setTumorFacts(tumorFacts);
+                    //tumor.put( "tumorFacts", tumorFacts );
+                    // Add to tumors list
+
+                    //tumors.add( tumor );
+                    tumors.add(newTumorSummary);
+                }
+                // Add to cancer map
+                //cancer.put( "tumors", tumors );
+                newCancerSummary.setTumors(tumors);
+                // Finally add to the cancers list
+                //cancers.add( cancer );
+                cancers.add(newCancerSummary);
+            }
+            tx.success();
+        } catch ( RuntimeException e ) {
+            throw new RuntimeException( "Failed to call getCancerAndTumorSummary() " + e.getMessage() );
+        }
+        //return cancers;
+        return newCancerAndTumorSummary;
+    }
+
+    public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
+        List<NewPatientSummary> patientSummaries = new ArrayList<>();
+        try ( Transaction tx = graphDb.beginTx() ) {
+            // DataUtil.getAllPatientNodes() is supposed to return all unique patients
+            final Collection<Node> patientNodes = DataUtil.getAllPatientNodes( graphDb );
+            for ( Node patientNode : patientNodes ) {
+                patientSummaries.add(createNewPatientSummary(graphDb, patientNode));
+            }
+            tx.success();
+        } catch ( RuntimeException e ) {
+            throw new RuntimeException( "Failed to call getPatientSummaries()" );
+        }
+     return patientSummaries;
+    }
+
+
+    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
+
+        final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
+        final List<NewReport> reportList = new ArrayList<>();
+        // For each note, add a patient object
+        for (Node note : notes) {
+            NewReport report = new NewReport();
+
+            // Report ID
+            //report.setId(DataUtil.objectToString(note.getProperty(NAME_KEY)));
+            report.setId(safeGetProperty(note, NAME_KEY, NAME_KEY + "_property_not_found"));
+            // Report principal date
+            report.setDate(DataUtil.getReportDate(safeGetProperty(note, NOTE_DATE, NOTE_DATE + "_property_not_found")));
+            // Report title/name
+            report.setReportName(safeGetProperty(note, NOTE_NAME, NOTE_NAME + "_property_not_found"));
+            // Report type
+            report.setType(safeGetProperty(note, NOTE_TYPE, NOTE_TYPE + "_property_not_found"));
+            // Report episode
+            report.setEpisode(safeGetProperty(note, NOTE_EPISODE, NOTE_EPISODE + "_property_not_found"));
+            // Add to the reportList
+            reportList.add(report);
+        }
+        NewPatientSummary newPatientSummary = new NewPatientSummary();
+        newPatientSummary.setPatientInfo(createPatientInfo( patientNode ));
+        newPatientSummary.setReportData(reportList);
+       return newPatientSummary;
+
+    }
 
 
     /////////////////////////////////////////////////////////////////////////////////////////
