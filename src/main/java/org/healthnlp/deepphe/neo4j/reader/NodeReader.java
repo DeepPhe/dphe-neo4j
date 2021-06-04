@@ -104,7 +104,7 @@ public enum NodeReader {
                 return null;
             }
             // get cancer summaries
-            final List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientNode);
+            final List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
             patientSummary.setNeoplasms(cancers);
             // Neoplasm is id, class uri and attributes.
             tx.success();
@@ -126,12 +126,19 @@ public enum NodeReader {
     //
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    //3
 
     private List<NeoplasmSummary> getCancers(final GraphDatabaseService graphDb,
                                              final Log log,
-                                             final Node patientNode) {
+                                             final String patientId) {
         final List<NeoplasmSummary> cancers = new ArrayList<>();
         try (Transaction tx = graphDb.beginTx()) {
+            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+            if (patientNode == null) {
+                log.error("Error in getCancers().  Looking for node named " + patientId + " but it does not exist.");
+                tx.success();
+                return null;
+            }
             SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_CANCER_RELATION)
                     .stream()
                     .map(n -> createCancer(graphDb, log, n))
@@ -139,7 +146,7 @@ public enum NodeReader {
                     .forEach(cancers::add);
             tx.success();
         } catch (TransactionFailureException txE) {
-            log.error("Cannot get cancers for " + patientNode.getId() + " from graph.");
+            log.error("Cannot get cancers for " +patientId+ " from graph.");
             log.error(txE.getMessage());
         } catch (Exception e) {
             // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
@@ -220,15 +227,20 @@ public enum NodeReader {
         return attributes;
     }
 
+    //defunct?
     private NeoplasmAttribute createAttribute(final GraphDatabaseService graphDb,
                                               final Log log,
                                               final Node attributeNode) {
         try (Transaction tx = graphDb.beginTx()) {
+
             final NeoplasmAttribute attribute = new NeoplasmAttribute();
+            //System.out.println(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
+            System.out.println(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_NAME)));
+
             attribute.setId(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
-            attribute.setClassUri(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_URI)));
+            //attribute.setClassUri(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_URI)));
             attribute.setName(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_NAME)));
-            attribute.setValue(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_VALUE)));
+            //attribute.setValue(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_VALUE)));
             final List<Mention> directEvidence = new ArrayList<>();
             SearchUtil.getOutRelatedNodes(graphDb, attributeNode, ATTRIBUTE_DIRECT_MENTION_RELATION)
                     .stream()
@@ -251,6 +263,7 @@ public enum NodeReader {
                     .forEach(notEvidence::add);
             attribute.setNotEvidence(notEvidence);
             tx.success();
+
             return attribute;
         } catch (TransactionFailureException txE) {
             log.error("Cannot get attribute " + attributeNode.getId() + " from graph.");
@@ -655,70 +668,69 @@ public enum NodeReader {
         return patientSummaryAndStagesList;
     }
 
+    //should be using getAttributes()
     public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+
         NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
+
+
         List<NewCancerSummary> cancers = new ArrayList<>();
         newCancerAndTumorSummary.setCancers(cancers);
-        //final List<Map<String, Object>> cancers = new ArrayList<>();
-        try ( Transaction tx = graphDb.beginTx() ) {
-            final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
-            if ( patientNode == null ) {
-                tx.success();
-                return newCancerAndTumorSummary;
-            }
-            final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes( graphDb, patientNode,
-                    SUBJECT_HAS_CANCER_RELATION );
-            for ( Node cancerNode : cancerNodes ) {
+
+        List<NeoplasmSummary> neoplasmSummaries = getCancers(graphDb, log, patientId);
+
+
+            for ( NeoplasmSummary neoplasmSummary : neoplasmSummaries ) {
                 // Cancer summary
                 //final Map<String, Object> cancer = new HashMap<>();
-                NewCancerSummary newCancerSummary = new NewCancerSummary();
-                final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
-                newCancerSummary.setCancerId(cancerId);
+                final NewCancerSummary newCancerSummary = new NewCancerSummary();
+                final String summaryName = neoplasmSummary.getId();
+               // final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
+                newCancerSummary.setCancerId(summaryName);
                 // Add to cancer map
                 //cancer.put( "cancerId", cancerId );
                 //final List<Map> cancerFacts = new ArrayList<>();
                 final List<NewCancerFact> cancerFacts = new ArrayList<>();
-                for ( Relationship relation : cancerNode.getRelationships( Direction.OUTGOING ) ) {
+                //pretty sure we already have all the outgoing relationships b/c/ that's what getcanceres does
+               // for ( Relationship relation : neoplasmSummary..getRelationships( Direction.OUTGOING ) ) {
+                for (NeoplasmAttribute neoplasmAttribute : neoplasmSummary.getAttributes()) {
                     NewCancerFact newCancerFact = new NewCancerFact();
                     NewCancerFactInfo newCancerFactInfo = new NewCancerFactInfo();
                     // final Map<String, Object> cancerFact = new HashMap<>();
                     // final Map<String, Object> cancerFactInfo = new HashMap<>();
-                    final String cancerFactRelationName = relation.getType()
-                            .name();
-                    if ( cancerFactRelationName.equals( INSTANCE_OF )
-                            || cancerFactRelationName.equals( CANCER_HAS_TUMOR )
-                            || cancerFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
-                        continue;
-                    }
-                    newCancerFact.setRelation(cancerFactRelationName);
+                    //final String cancerFactRelationName = relation.getType()
+                     //       .name();
+                   //if ( cancerFactRelationName.equals( INSTANCE_OF )
+                    //        || cancerFactRelationName.equals( CANCER_HAS_TUMOR )
+                      //      || cancerFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+                        //continue;
+                    //}
+                    //newCancerFact.setRelation(cancerFactRelationName);
+                    newCancerFact.setRelation(neoplasmAttribute.getId());
                     //cancerFact.put( "relation", cancerFactRelationName );
-                    newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName( cancerFactRelationName ) );
+                    newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName( neoplasmAttribute.getId() ) );
 
                     //cancerFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( cancerFactRelationName ) );
-                    final Node targetNode = relation.getOtherNode( cancerNode );
-                    final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
-                    if (classNode != null) {
-                        final String classId = DataUtil.objectToString(classNode.getProperty(NAME_KEY));
+                    //final Node targetNode = relation.getOtherNode( cancerNode );
+                    //final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+                   // if (classNode != null) {
+                      //  final String classId = DataUtil.objectToString(classNode.getProperty(NAME_KEY));
                         //cancerFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
                         //cancerFactInfo.put( "name", classId );
-                        newCancerFactInfo.setId(DataUtil.objectToString(targetNode.getProperty(NAME_KEY)));
-                        newCancerFactInfo.setName(classId);
+                        //newCancerFactInfo.setId(DataUtil.objectToString(targetNode.getProperty(NAME_KEY)));
+                      //  newCancerFactInfo.setId();
+                       // newCancerFactInfo.setName(classId);
+                    newCancerFactInfo.setId("jdl-junk-id1111");
+                    newCancerFactInfo.setName("jdl-junk-cancer-fact-info-name1111");
+                    newCancerFactInfo.setPrettyName("jdl-junk-cancer-fact-info-prettyname1111");
+//                        if (HAS_STAGE.equals(cancerFactRelationName)) {
+//                            newCancerFactInfo.setPrettyName(TextFormatter.toPrettyStage(classId));
+//                            //cancerFactInfo.put( "prettyName", TextFormatter.toPrettyStage( classId ) );
+//                        } else {
+//                            newCancerFactInfo.setPrettyName(DataUtil.objectToString(classNode.getProperty(PREF_TEXT_KEY)));
+//                            //cancerFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+//                        }
 
-                        if (HAS_STAGE.equals(cancerFactRelationName)) {
-                            newCancerFactInfo.setPrettyName(TextFormatter.toPrettyStage(classId));
-                            //cancerFactInfo.put( "prettyName", TextFormatter.toPrettyStage( classId ) );
-                        } else {
-                            newCancerFactInfo.setPrettyName(DataUtil.objectToString(classNode.getProperty(PREF_TEXT_KEY)));
-                            //cancerFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
-                        }
-                    } else {
-                        newCancerFactInfo.setId("jdl-junk-id");
-                        newCancerFactInfo.setName("jdl-junk-cancer-fact-info-name");
-                        newCancerFactInfo.setPrettyName("jdl-junk-cancer-fact-info-prettyname");
-                        System.out.println("Unable to find targetNode: " + targetNode);
-                        System.out.println("Cancer fact relation name: " +cancerFactRelationName);
-                        System.out.println("TargetNode name"+ targetNode.getProperty(NAME_KEY));
-                    }
 
                     // Add fact to cancerFact map
                     //cancerFact.put( "cancerFactInfo", cancerFactInfo );
@@ -731,77 +743,223 @@ public enum NodeReader {
                 newCancerSummary.setCancerFacts( cancerFacts );
                 // Tumor summary
                 //final List<Map<String, Object>> tumors = new ArrayList<>();
-                final List<NewTumorSummary> tumors = new ArrayList<>();
-                final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes( graphDb, cancerNode,
-                        CANCER_HAS_TUMOR_RELATION );
-                if (tumorNodes.size() == 0) {
-                    System.out.println("tumorNodes not found");
-                }
-                for ( Node tumorNode : tumorNodes ) {
-                    //final Map<String, Object> tumor = new HashMap<>();
-                    NewTumorSummary newTumorSummary = new NewTumorSummary();
-                    final String tumorId = DataUtil.objectToString( tumorNode.getProperty( NAME_KEY ) );
-                    // Add tumorId
-                    // tumor.put( "tumorId", tumorId );
-                    newTumorSummary.setTumorId(tumorId);
+//                final List<NewTumorSummary> tumors = new ArrayList<>();
+//                final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes( graphDb, cancerNode,
+//                        CANCER_HAS_TUMOR_RELATION );
+//                if (tumorNodes.size() == 0) {
+//                    System.out.println("tumorNodes not found");
+//                }
+//                for ( Node tumorNode : tumorNodes ) {
+//                    //final Map<String, Object> tumor = new HashMap<>();
+//                    NewTumorSummary newTumorSummary = new NewTumorSummary();
+//                    final String tumorId = DataUtil.objectToString( tumorNode.getProperty( NAME_KEY ) );
+//                    // Add tumorId
+//                    // tumor.put( "tumorId", tumorId );
+//                    newTumorSummary.setTumorId(tumorId);
+//
+//                    //tumor.put( HAS_TUMOR_TYPE, DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE ) ) );
+//                    newTumorSummary.setHasTumorType(DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE )));
+//                    //final List<Map<String, Object>> tumorFacts = new ArrayList<>();
+//                    List<NewTumorFact> tumorFacts =  new ArrayList<>();
+//                    for ( Relationship relation : tumorNode.getRelationships( Direction.OUTGOING ) ) {
+//                        //final Map<String, Object> tumorFact = new HashMap<>();
+//                        //final Map<String, Object> tumorFactInfo = new HashMap<>();
+//                        final String tumorFactRelationName = relation.getType()
+//                                .name();
+//                        if ( tumorFactRelationName.equals( INSTANCE_OF )
+//                                || tumorFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+//                            continue;
+//                        }
+//                        NewTumorFact tumorFact = new NewTumorFact();
+//                        //tumorFact.put( "relation", tumorFactRelationName );
+//                        tumorFact.setRelation(tumorFactRelationName);
+//
+//                        //tumorFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( tumorFactRelationName ) );
+//                        tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName( tumorFactRelationName ));
+//                        final Node targetNode = relation.getOtherNode( tumorNode );
+//                        final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+//                        final String classId = DataUtil.objectToString( classNode.getProperty( NAME_KEY ) );
+//                        NewCancerFactInfo tumorFactInfo = new NewCancerFactInfo();
+//                        //tumorFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
+//                        tumorFactInfo.setId(DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ));
+//                        //tumorFactInfo.put( "name", classId );
+//                        tumorFactInfo.setName(classId);
+//                        //tumorFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+//                        tumorFactInfo.setPrettyName(DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ));
+//                        // Add fact to tumorFact map
+//                        //tumorFact.put( "tumorFactInfo", tumorFactInfo );
+//                        tumorFact.setTumorFactInfo(tumorFactInfo);
+//                        // Add to list
+//                        tumorFacts.add( tumorFact );
+//                    }
+//                    // Add tumorId
+//                    newTumorSummary.setTumorFacts(tumorFacts);
+//                    //tumor.put( "tumorFacts", tumorFacts );
+//                    // Add to tumors list
+//
+//                    //tumors.add( tumor );
+//                    tumors.add(newTumorSummary);
+//                }
+//                // Add to cancer map
+//                //cancer.put( "tumors", tumors );
+//                newCancerSummary.setTumors(tumors);
 
-                    //tumor.put( HAS_TUMOR_TYPE, DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE ) ) );
-                    newTumorSummary.setHasTumorType(DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE )));
-                    //final List<Map<String, Object>> tumorFacts = new ArrayList<>();
-                    List<NewTumorFact> tumorFacts =  new ArrayList<>();
-                    for ( Relationship relation : tumorNode.getRelationships( Direction.OUTGOING ) ) {
-                        //final Map<String, Object> tumorFact = new HashMap<>();
-                        //final Map<String, Object> tumorFactInfo = new HashMap<>();
-                        final String tumorFactRelationName = relation.getType()
-                                .name();
-                        if ( tumorFactRelationName.equals( INSTANCE_OF )
-                                || tumorFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
-                            continue;
-                        }
-                        NewTumorFact tumorFact = new NewTumorFact();
-                        //tumorFact.put( "relation", tumorFactRelationName );
-                        tumorFact.setRelation(tumorFactRelationName);
-
-                        //tumorFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( tumorFactRelationName ) );
-                        tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName( tumorFactRelationName ));
-                        final Node targetNode = relation.getOtherNode( tumorNode );
-                        final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
-                        final String classId = DataUtil.objectToString( classNode.getProperty( NAME_KEY ) );
-                        NewCancerFactInfo tumorFactInfo = new NewCancerFactInfo();
-                        //tumorFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
-                        tumorFactInfo.setId(DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ));
-                        //tumorFactInfo.put( "name", classId );
-                        tumorFactInfo.setName(classId);
-                        //tumorFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
-                        tumorFactInfo.setPrettyName(DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ));
-                        // Add fact to tumorFact map
-                        //tumorFact.put( "tumorFactInfo", tumorFactInfo );
-                        tumorFact.setTumorFactInfo(tumorFactInfo);
-                        // Add to list
-                        tumorFacts.add( tumorFact );
-                    }
-                    // Add tumorId
-                    newTumorSummary.setTumorFacts(tumorFacts);
-                    //tumor.put( "tumorFacts", tumorFacts );
-                    // Add to tumors list
-
-                    //tumors.add( tumor );
-                    tumors.add(newTumorSummary);
-                }
-                // Add to cancer map
-                //cancer.put( "tumors", tumors );
-                newCancerSummary.setTumors(tumors);
                 // Finally add to the cancers list
-                //cancers.add( cancer );
-                cancers.add(newCancerSummary);
+                cancers.add( newCancerSummary );
+
+
             }
-            tx.success();
-        } catch ( RuntimeException e ) {
-            throw new RuntimeException( "Failed to call getCancerAndTumorSummary() " + e.getMessage() );
-        }
-        //return cancers;
-        return newCancerAndTumorSummary;
+
+      return newCancerAndTumorSummary;
     }
+
+//    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+//        NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
+//        List<NewCancerSummary> cancers = new ArrayList<>();
+//        newCancerAndTumorSummary.setCancers(cancers);
+//        //final List<Map<String, Object>> cancers = new ArrayList<>();
+//        try ( Transaction tx = graphDb.beginTx() ) {
+//            final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
+//            if ( patientNode == null ) {
+//                tx.success();
+//                return newCancerAndTumorSummary;
+//            }
+//            final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes( graphDb, patientNode,
+//                    SUBJECT_HAS_CANCER_RELATION );
+//            for ( Node cancerNode : cancerNodes ) {
+//                // Cancer summary
+//                //final Map<String, Object> cancer = new HashMap<>();
+//                NewCancerSummary newCancerSummary = new NewCancerSummary();
+//                final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
+//                newCancerSummary.setCancerId(cancerId);
+//                // Add to cancer map
+//                //cancer.put( "cancerId", cancerId );
+//                //final List<Map> cancerFacts = new ArrayList<>();
+//                final List<NewCancerFact> cancerFacts = new ArrayList<>();
+//                for ( Relationship relation : cancerNode.getRelationships( Direction.OUTGOING ) ) {
+//                    NewCancerFact newCancerFact = new NewCancerFact();
+//                    NewCancerFactInfo newCancerFactInfo = new NewCancerFactInfo();
+//                    // final Map<String, Object> cancerFact = new HashMap<>();
+//                    // final Map<String, Object> cancerFactInfo = new HashMap<>();
+//                    final String cancerFactRelationName = relation.getType()
+//                            .name();
+//                    if ( cancerFactRelationName.equals( INSTANCE_OF )
+//                            || cancerFactRelationName.equals( CANCER_HAS_TUMOR )
+//                            || cancerFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+//                        continue;
+//                    }
+//                    newCancerFact.setRelation(cancerFactRelationName);
+//                    //cancerFact.put( "relation", cancerFactRelationName );
+//                    newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName( cancerFactRelationName ) );
+//
+//                    //cancerFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( cancerFactRelationName ) );
+//                    final Node targetNode = relation.getOtherNode( cancerNode );
+//                    final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+//                    if (classNode != null) {
+//                        final String classId = DataUtil.objectToString(classNode.getProperty(NAME_KEY));
+//                        //cancerFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
+//                        //cancerFactInfo.put( "name", classId );
+//                        newCancerFactInfo.setId(DataUtil.objectToString(targetNode.getProperty(NAME_KEY)));
+//                        newCancerFactInfo.setName(classId);
+//
+//                        if (HAS_STAGE.equals(cancerFactRelationName)) {
+//                            newCancerFactInfo.setPrettyName(TextFormatter.toPrettyStage(classId));
+//                            //cancerFactInfo.put( "prettyName", TextFormatter.toPrettyStage( classId ) );
+//                        } else {
+//                            newCancerFactInfo.setPrettyName(DataUtil.objectToString(classNode.getProperty(PREF_TEXT_KEY)));
+//                            //cancerFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+//                        }
+//                    } else {
+//                        newCancerFactInfo.setId("jdl-junk-id");
+//                        newCancerFactInfo.setName("jdl-junk-cancer-fact-info-name");
+//                        newCancerFactInfo.setPrettyName("jdl-junk-cancer-fact-info-prettyname");
+//                        System.out.println("Unable to find targetNode: " + targetNode);
+//                        System.out.println("Cancer fact relation name: " +cancerFactRelationName);
+//                        System.out.println("TargetNode name"+ targetNode.getProperty(NAME_KEY));
+//                    }
+//
+//                    // Add fact to cancerFact map
+//                    //cancerFact.put( "cancerFactInfo", cancerFactInfo );
+//                    newCancerFact.setCancerFactInfo(newCancerFactInfo);
+//                    // Add to list
+//                    //cancerFacts.add( cancerFact );
+//                    cancerFacts.add(newCancerFact);
+//                }
+//                // Add to cancer map
+//                newCancerSummary.setCancerFacts( cancerFacts );
+//                // Tumor summary
+//                //final List<Map<String, Object>> tumors = new ArrayList<>();
+//                final List<NewTumorSummary> tumors = new ArrayList<>();
+//                final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes( graphDb, cancerNode,
+//                        CANCER_HAS_TUMOR_RELATION );
+//                if (tumorNodes.size() == 0) {
+//                    System.out.println("tumorNodes not found");
+//                }
+//                for ( Node tumorNode : tumorNodes ) {
+//                    //final Map<String, Object> tumor = new HashMap<>();
+//                    NewTumorSummary newTumorSummary = new NewTumorSummary();
+//                    final String tumorId = DataUtil.objectToString( tumorNode.getProperty( NAME_KEY ) );
+//                    // Add tumorId
+//                    // tumor.put( "tumorId", tumorId );
+//                    newTumorSummary.setTumorId(tumorId);
+//
+//                    //tumor.put( HAS_TUMOR_TYPE, DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE ) ) );
+//                    newTumorSummary.setHasTumorType(DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE )));
+//                    //final List<Map<String, Object>> tumorFacts = new ArrayList<>();
+//                    List<NewTumorFact> tumorFacts =  new ArrayList<>();
+//                    for ( Relationship relation : tumorNode.getRelationships( Direction.OUTGOING ) ) {
+//                        //final Map<String, Object> tumorFact = new HashMap<>();
+//                        //final Map<String, Object> tumorFactInfo = new HashMap<>();
+//                        final String tumorFactRelationName = relation.getType()
+//                                .name();
+//                        if ( tumorFactRelationName.equals( INSTANCE_OF )
+//                                || tumorFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
+//                            continue;
+//                        }
+//                        NewTumorFact tumorFact = new NewTumorFact();
+//                        //tumorFact.put( "relation", tumorFactRelationName );
+//                        tumorFact.setRelation(tumorFactRelationName);
+//
+//                        //tumorFact.put( "relationPrettyName", DataUtil.getRelationPrettyName( tumorFactRelationName ) );
+//                        tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName( tumorFactRelationName ));
+//                        final Node targetNode = relation.getOtherNode( tumorNode );
+//                        final Node classNode = DataUtil.getInstanceClass( graphDb, targetNode );
+//                        final String classId = DataUtil.objectToString( classNode.getProperty( NAME_KEY ) );
+//                        NewCancerFactInfo tumorFactInfo = new NewCancerFactInfo();
+//                        //tumorFactInfo.put( "id", DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ) );
+//                        tumorFactInfo.setId(DataUtil.objectToString( targetNode.getProperty( NAME_KEY ) ));
+//                        //tumorFactInfo.put( "name", classId );
+//                        tumorFactInfo.setName(classId);
+//                        //tumorFactInfo.put( "prettyName", DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ) );
+//                        tumorFactInfo.setPrettyName(DataUtil.objectToString( classNode.getProperty( PREF_TEXT_KEY ) ));
+//                        // Add fact to tumorFact map
+//                        //tumorFact.put( "tumorFactInfo", tumorFactInfo );
+//                        tumorFact.setTumorFactInfo(tumorFactInfo);
+//                        // Add to list
+//                        tumorFacts.add( tumorFact );
+//                    }
+//                    // Add tumorId
+//                    newTumorSummary.setTumorFacts(tumorFacts);
+//                    //tumor.put( "tumorFacts", tumorFacts );
+//                    // Add to tumors list
+//
+//                    //tumors.add( tumor );
+//                    tumors.add(newTumorSummary);
+//                }
+//                // Add to cancer map
+//                //cancer.put( "tumors", tumors );
+//                newCancerSummary.setTumors(tumors);
+//                // Finally add to the cancers list
+//                //cancers.add( cancer );
+//                cancers.add(newCancerSummary);
+//            }
+//            tx.success();
+//        } catch ( RuntimeException e ) {
+//            throw new RuntimeException( "Failed to call getCancerAndTumorSummary() " + e.getMessage() );
+//        }
+//        //return cancers;
+//        return newCancerAndTumorSummary;
+//    }
 
     public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
         List<NewPatientSummary> patientSummaries = new ArrayList<>();
