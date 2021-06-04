@@ -30,94 +30,157 @@ public enum NodeReader {
     }
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //                            PATIENT DATA
-    //
-    /////////////////////////////////////////////////////////////////////////////////////////
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            COHORT DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
+
+
+   public List<PatientSummary> getPatientSummaries( final GraphDatabaseService graphDb,
+                                                    final Log log ) {
+      return DataUtil.getAllPatientNodes( graphDb )
+                     .stream()
+                     .map( n -> getPatientSummary( graphDb, log, n ) )
+                     .filter( Objects::nonNull )
+                     .collect( Collectors.toList() );
+   }
+
+   public List<PatientDiagnosis> getPatientDiagnoses( final GraphDatabaseService graphDb,
+                                                      final Log log ) {
+      return DataUtil.getAllPatientNodes( graphDb )
+                     .stream()
+                     .map( n -> createPatientDiagnoses( graphDb, log, n ) )
+                     .filter( Objects::nonNull )
+                     .flatMap( Collection::stream )
+                     .collect( Collectors.toList() );
+   }
+
+   private List<PatientDiagnosis> createPatientDiagnoses( final GraphDatabaseService graphDb,
+                                         final Log log,
+                                         final Node patientNode ) {
+      final String patientId = DataUtil.getNodeName( graphDb, patientNode );
+      return getCancers( graphDb, log, patientNode ).stream()
+                                             .map( c -> createPatientDiagnosis( patientId, c ) )
+                                             .collect( Collectors.toList() );
+   }
+
+   static private PatientDiagnosis createPatientDiagnosis( final String patientId, final NeoplasmSummary cancer ) {
+      final PatientDiagnosis diagnosis = new PatientDiagnosis();
+      diagnosis.setPatientId( patientId );
+      diagnosis.setClassUri( cancer.getClassUri() );
+      return diagnosis;
+   }
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            PATIENT DATA
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
 
 
     public Patient getPatient(final GraphDatabaseService graphDb,
                               final Log log,
-                              final String patientId) {
-        final Patient patient = new Patient();
-        try (Transaction tx = graphDb.beginTx()) {
-            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
-            if (patientNode == null) {
-                log.error("No patient node for " + patientId);
-                tx.success();
-                return null;
-            }
-
-            patient.setId(patientId);
-
-
-            String nameValue = DataUtil.safeGetProperty(patientNode, PATIENT_NAME, "Joan Q. Public");
-
-            String genderValue = DataUtil.safeGetProperty(patientNode, PATIENT_GENDER, "F");
-
-
-            String birthValue = DataUtil.safeGetProperty(patientNode, PATIENT_BIRTH_DATE, "2021-09-13");
+                              final String patientId ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
+         Patient patient = getPatient( graphDb, log, patientNode, patientId );
+         tx.success();
+         return patient;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get patient " + patientId + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
 
 
-            String deathValue = DataUtil.safeGetProperty(patientNode, PATIENT_DEATH_DATE, "2025-09-3");
+   public Patient getPatient( final GraphDatabaseService graphDb,
+                              final Log log,
+                              final Node patientNode,
+                              final String patientId ) {
+      if ( patientNode == null ) {
+         log.error( "No patient node for " + patientId );
+         return null;
+      }
+      final Patient patient = new Patient();
+      patient.setId( patientId );
+      patient.setBirth( "" );
+      patient.setDeath( "" );
+      patient.setGender( "" );
+      patient.setName( patientId );
+      final List<Note> notes = getNotes( graphDb, log, patientNode );
+      patient.setNotes( notes );
+      return patient;
+   }
 
 
-            patient.setName(nameValue);
-            patient.setGender(genderValue);
-            patient.setBirth(birthValue);
-            patient.setDeath(deathValue);
-
-
-            final List<Note> notes = getNotes(graphDb, log, patientNode);
-            patient.setNotes(notes);
-
+   public PatientSummary getPatientSummary( final GraphDatabaseService graphDb,
+                              final Log log,
+                              final String patientId ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Node patientNode = SearchUtil.getLabeledNode( graphDb, PATIENT_LABEL, patientId );
+         if ( patientNode == null ) {
+            log.error( "No patient node for " + patientId );
             tx.success();
-        } catch (TransactionFailureException txE) {
-            log.error("Cannot get patient " + patientId + " from graph.");
-            log.error(txE.getMessage());
-        } catch (Exception e) {
-            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-            log.error("Ignoring Exception " + e.getMessage());
-            // Attempt to continue.
-        }
-        return patient;
-    }
-
-
-    public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
-                                            final Log log,
-                                            final String patientId) {
-        final PatientSummary patientSummary = new PatientSummary();
-        patientSummary.setId(patientId);
-        final Patient patient = getPatient(graphDb, log, patientId);
-        if (patient == null) {
             return null;
-        }
-        patientSummary.setPatient(patient);
+         }
+         PatientSummary patientSummary = getPatientSummary( graphDb, log, patientNode, patientId );
+         tx.success();
+         return patientSummary;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get patient " + patientId + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
 
-        try (Transaction tx = graphDb.beginTx()) {
-            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
-            if (patientNode == null) {
-                log.error("No patient node for " + patientId);
-                tx.success();
-                return null;
-            }
-            // get cancer summaries
-            final List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
-            patientSummary.setNeoplasms(cancers);
-            // Neoplasm is id, class uri and attributes.
-            tx.success();
-        } catch (TransactionFailureException txE) {
-            log.error("Cannot get patient " + patientId + " from graph.");
-            log.error(txE.getMessage());
-        } catch (Exception e) {
-            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-            log.error("Ignoring Exception " + e.getMessage());
-            // Attempt to continue.
-        }
-        return patientSummary;
-    }
+
+   public PatientSummary getPatientSummary( final GraphDatabaseService graphDb,
+                                            final Log log,
+                                            final Node patientNode ) {
+      if ( patientNode == null ) {
+         log.error( "Null Patient Node to getPatientSummary" );
+         return null;
+      }
+      final String patientId = DataUtil.getNodeName( graphDb, patientNode );
+      if ( patientId.equals( MISSING_NODE_NAME ) ) {
+         log.error( "No patient Id for " + patientNode.getId() );
+         return null;
+      }
+      return getPatientSummary( graphDb, log, patientNode, patientId );
+   }
+
+
+   public PatientSummary getPatientSummary( final GraphDatabaseService graphDb,
+                                            final Log log,
+                                            final Node patientNode,
+                                            final String patientId ) {
+      if ( patientNode == null ) {
+         log.error( "No patient node for " + patientId );
+         return null;
+      }
+      final PatientSummary patientSummary = new PatientSummary();
+      patientSummary.setId( patientId );
+      final Patient patient = getPatient( graphDb, log, patientNode, patientId );
+      if ( patient == null ) {
+         return null;
+      }
+      patientSummary.setPatient( patient );
+      // get cancer summaries
+      final List<NeoplasmSummary> cancers = getCancers( graphDb, log, patientNode );
+      patientSummary.setNeoplasms( cancers );
+      return patientSummary;
+   }
 
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -961,20 +1024,20 @@ public enum NodeReader {
 //        return newCancerAndTumorSummary;
 //    }
 
-    public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
-        List<NewPatientSummary> patientSummaries = new ArrayList<>();
-        try ( Transaction tx = graphDb.beginTx() ) {
-            // DataUtil.getAllPatientNodes() is supposed to return all unique patients
-            final Collection<Node> patientNodes = DataUtil.getAllPatientNodes( graphDb );
-            for ( Node patientNode : patientNodes ) {
-                patientSummaries.add(createNewPatientSummary(graphDb, patientNode));
-            }
-            tx.success();
-        } catch ( RuntimeException e ) {
-            throw new RuntimeException( "Failed to call getPatientSummaries()" );
-        }
-     return patientSummaries;
-    }
+//    public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
+//        List<NewPatientSummary> patientSummaries = new ArrayList<>();
+//        try ( Transaction tx = graphDb.beginTx() ) {
+//            // DataUtil.getAllPatientNodes() is supposed to return all unique patients
+//            final Collection<Node> patientNodes = DataUtil.getAllPatientNodes( graphDb );
+//            for ( Node patientNode : patientNodes ) {
+//                patientSummaries.add(createNewPatientSummary(graphDb, patientNode));
+//            }
+//            tx.success();
+//        } catch ( RuntimeException e ) {
+//            throw new RuntimeException( "Failed to call getPatientSummaries()" );
+//        }
+//     return patientSummaries;
+//    }
 
 
     private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
