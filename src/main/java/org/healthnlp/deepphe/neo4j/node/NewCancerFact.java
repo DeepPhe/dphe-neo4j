@@ -2,14 +2,13 @@ package org.healthnlp.deepphe.neo4j.node;
 
 public class NewCancerFact extends NewFact {
 
-    NewCancerFactInfo cancerFactInfo;
+    NewFactInfo cancerFactInfo;
 
-    public NewCancerFactInfo getCancerFactInfo() {
+    public NewFactInfo getCancerFactInfo() {
         return cancerFactInfo;
     }
 
-    public void setCancerFactInfo(NewCancerFactInfo cancerFactInfo) {
+    public void setCancerFactInfo(NewFactInfo cancerFactInfo) {
         this.cancerFactInfo = cancerFactInfo;
     }
-
 }

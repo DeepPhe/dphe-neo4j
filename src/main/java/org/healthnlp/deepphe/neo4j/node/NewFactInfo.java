@@ -1,6 +1,6 @@
 package org.healthnlp.deepphe.neo4j.node;
 
-public class NewCancerFactInfo {
+public class NewFactInfo {
     String id, name, prettyName;
 
     public String getId() {
