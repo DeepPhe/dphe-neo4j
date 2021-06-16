@@ -15,9 +15,9 @@ public class Fact {
    private String name;
    private String value;
 
-   private Map<String,List<Fact>> relatedFacts;
+   private Map<String,List<String>> relatedFactIds;
 
-   private List<Mention> directEvidence;
+   private List<String> directEvidenceIds;
 
    private List<Integer> confidenceFeatures;
    private Integer confidence;
@@ -29,9 +29,6 @@ public class Fact {
    public void setId( final String id ) {
       this.id = id;
    }
-   public String getName() {
-      return name;
-   }
 
    public String getClassUri() {
       return classUri;
@@ -39,6 +36,10 @@ public class Fact {
 
    public void setClassUri( final String classUri ) {
       this.classUri = classUri;
+   }
+
+   public String getName() {
+      return name;
    }
 
    public void setName( final String name ) {
@@ -53,20 +54,20 @@ public class Fact {
       this.value = value;
    }
 
-   public Map<String,List<Fact>> getRelatedFacts() {
-      return relatedFacts;
+   public Map<String,List<String>> getRelatedFactIds() {
+      return relatedFactIds;
    }
 
-   public void setRelatedFacts( final Map<String,List<Fact>> relatedFacts ) {
-      this.relatedFacts = relatedFacts;
+   public void setRelatedFactIds( final Map<String,List<String>> relatedFactIds ) {
+      this.relatedFactIds = relatedFactIds;
    }
 
-   public List<Mention> getDirectEvidence() {
-      return directEvidence;
+   public List<String> getDirectEvidenceIds() {
+      return directEvidenceIds;
    }
 
-   public void setDirectEvidence( final List<Mention> directEvidence ) {
-      this.directEvidence = directEvidence;
+   public void setDirectEvidenceIds( final List<String> directEvidenceIds ) {
+      this.directEvidenceIds = directEvidenceIds;
    }
 
    public List<Integer> getConfidenceFeatures() {
