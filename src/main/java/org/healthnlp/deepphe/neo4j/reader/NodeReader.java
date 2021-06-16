@@ -327,7 +327,7 @@ public enum NodeReader {
 
             final NeoplasmAttribute attribute = new NeoplasmAttribute();
             //System.out.println(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
-            System.out.println(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_NAME)));
+            //System.out.println(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_NAME)));
 
             attribute.setId(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
             attribute.setClassUri(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_URI)));
@@ -760,6 +760,34 @@ public enum NodeReader {
         return patientSummaryAndStagesList;
     }
 
+
+    private static String convertToLogSyntax(NeoplasmAttribute neoplasmAttribute) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("id: " + neoplasmAttribute.getId() + "\n");
+        stringBuilder.append(" |--classUri : " + neoplasmAttribute.getClassUri() + "\n");
+        stringBuilder.append(" |--name: " + neoplasmAttribute.getName() + "\n");
+        stringBuilder.append(" |--value: " + neoplasmAttribute.getValue() + "\n");
+        stringBuilder.append(" |--confidence: " + neoplasmAttribute.getConfidence() + "\n");
+        if (neoplasmAttribute.getConfidenceFeatures() != null)
+        stringBuilder.append(" +--confidenceFeatures size: " + neoplasmAttribute.getConfidenceFeatures().size() + "\n");;
+
+        if (neoplasmAttribute.getIndirectEvidence() != null)
+        stringBuilder.append(" +--indirectEvidence size: " + neoplasmAttribute.getIndirectEvidence().size() + "\n");
+        if (neoplasmAttribute.getDirectEvidence() != null)
+        stringBuilder.append(" +--directEvidence size: " + neoplasmAttribute.getDirectEvidence().size() + "\n");
+        if (neoplasmAttribute.getNotEvidence() != null)
+        stringBuilder.append(" +--notEvidence size: " + neoplasmAttribute.getNotEvidence().size() + "\n");
+
+        return stringBuilder.toString();
+    }
+
+    private static void logAttribute(String message, NeoplasmAttribute neoplasmAttribute, Log log) {
+        if (neoplasmAttribute != null) {
+            String logMessage = convertToLogSyntax(neoplasmAttribute);
+            log.info(message + logMessage);
+        }
+    }
+
     //should be using getAttributes()
     public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
 
@@ -767,55 +795,62 @@ public enum NodeReader {
         List<NewCancerSummary> cancers = new ArrayList<>();
         newCancerAndTumorSummary.setCancers(cancers);
 
-        List<NeoplasmSummary> neoplasmSummaries = getCancers(graphDb, log, patientId);
 
-        for ( NeoplasmSummary cancer : neoplasmSummaries ) {
+        List<NewPatientSummary> list = getPatientSummaries(graphDb, log);
+        for (NewPatientSummary patientSummary : list) {
+            String ptid = patientSummary.getPatientInfo().getPatientId();
+            //List<NeoplasmSummary> neoplasmSummaries = getCancers(graphDb, log, patientId);
+            List<NeoplasmSummary> neoplasmSummaries = getCancers(graphDb, log, ptid);
+            for (NeoplasmSummary cancer : neoplasmSummaries) {
                 // Cancer summary
                 //final Map<String, Object> cancer = new HashMap<>();
                 final NewCancerSummary newCancerSummary = new NewCancerSummary();
                 cancers.add(newCancerSummary);
                 final String summaryName = cancer.getId();
-               // final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
+                // final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
                 newCancerSummary.setCancerId(summaryName);
 
-                List<NewTumorSummary> tumors =  new ArrayList<>();
+                List<NewTumorSummary> tumors = new ArrayList<>();
                 newCancerSummary.setTumors(tumors);
 
                 List<NewCancerFact> cancerFacts = new ArrayList<>();
                 newCancerSummary.setCancerFacts(cancerFacts);
 
-            for (NeoplasmAttribute neoplasmAttribute : cancer.getAttributes()) {
-                NewCancerFact newCancerFact = new NewCancerFact();
-                cancerFacts.add(newCancerFact);
+                for (NeoplasmAttribute neoplasmAttribute : cancer.getAttributes()) {
+                    logAttribute("\ncancer:\n", neoplasmAttribute, log);
+                    NewCancerFact newCancerFact = new NewCancerFact();
+                    cancerFacts.add(newCancerFact);
 
-                NewFactInfo newCancerFactInfo = new NewFactInfo();
-                newCancerFactInfo.setId(neoplasmAttribute.getId());
-                newCancerFactInfo.setName(neoplasmAttribute.getName());
-                newCancerFactInfo.setPrettyName("Pretty " + neoplasmAttribute.getName());
-                newCancerFact.setCancerFactInfo(newCancerFactInfo);
-                newCancerFact.setRelation(neoplasmAttribute.getId());
-                newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName( neoplasmAttribute.getId()));
-                newCancerFact.setCancerFactInfo(newCancerFactInfo);
+                    //this is the dx: cancer.getClassUri()
+                    NewFactInfo newCancerFactInfo = new NewFactInfo();
+                    newCancerFactInfo.setId(neoplasmAttribute.getId());
+                    newCancerFactInfo.setName(neoplasmAttribute.getName());
+                    newCancerFactInfo.setPrettyName("Pretty " + neoplasmAttribute.getName());
+                    newCancerFact.setCancerFactInfo(newCancerFactInfo);
+                    newCancerFact.setRelation(neoplasmAttribute.getId());
+                    newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName(neoplasmAttribute.getId()));
+                    newCancerFact.setCancerFactInfo(newCancerFactInfo);
 
-            }
+                }
 
                 for (NeoplasmSummary tumor : cancer.getSubSummaries()) {
                     //facts hopefully
                     NewTumorSummary newTumorSummary = new NewTumorSummary();
                     tumors.add(newTumorSummary);
-
+                    tumor.getClassUri();
                     newTumorSummary.setTumorId(tumor.getId());
                     newTumorSummary.setHasTumorType("Get Tumor Type");
                     List<NewTumorFact> newTumorFacts = new ArrayList<>();
                     newTumorSummary.setTumorFacts(newTumorFacts);
-                    for (NeoplasmAttribute tumorAttributes : tumor.getAttributes()) {
+                    for (NeoplasmAttribute tumorAttribute : tumor.getAttributes()) {
+                        logAttribute("\ntumor:\n", tumorAttribute, log);
                         NewTumorFact newTumorFact = new NewTumorFact();
                         newTumorFacts.add(newTumorFact);
 
                         NewFactInfo newTumorFactInfo = new NewFactInfo();
-                        newTumorFactInfo.setId(tumorAttributes.getId());
-                        newTumorFactInfo.setName(tumorAttributes.getName());
-                        newTumorFactInfo.setPrettyName(tumorAttributes.getName());
+                        newTumorFactInfo.setId(tumorAttribute.getId());
+                        newTumorFactInfo.setName(tumorAttribute.getName());
+                        newTumorFactInfo.setPrettyName(tumorAttribute.getName());
 
                         newTumorFact.setTumorFactInfo(newTumorFactInfo);
                         newTumorFact.setRelationPrettyName("No idea how to get this 1");
@@ -825,6 +860,7 @@ public enum NodeReader {
                 }
 
             }
+        }
 
       return newCancerAndTumorSummary;
     }
