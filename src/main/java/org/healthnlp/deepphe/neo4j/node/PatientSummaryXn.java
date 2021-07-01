@@ -8,11 +8,12 @@ import java.util.List;
  * @version %I%
  * @since 7/15/2020
  */
-public class PatientSummary {
+public class PatientSummaryXn {
 
    private String id;
    private Patient patient;
-   private List<NeoplasmSummary> neoplasms;
+   private List<Cancer> cancers;
+   private List<Fact> facts;
 
    public String getId() {
       return id;
@@ -30,12 +31,20 @@ public class PatientSummary {
       this.patient = patient;
    }
 
-   public List<NeoplasmSummary> getNeoplasms() {
-      return neoplasms;
+   public List<Cancer> getCancers() {
+      return cancers;
    }
 
-   public void setNeoplasms( final List<NeoplasmSummary> neoplasms ) {
-      this.neoplasms = neoplasms;
+   public void setCancers( final List<Cancer> cancers ) {
+      this.cancers = cancers;
+   }
+
+   public List<Fact> getFacts() {
+      return facts;
+   }
+
+   public void setFacts( final List<Fact> facts ) {
+      this.facts = facts;
    }
 
 

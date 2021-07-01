@@ -560,46 +560,88 @@ public enum NodeReader {
                 fullMention.addRelation(DataUtil.objectToString(targetNode.getProperty(NAME_KEY)), relationName);
             }
 
-            tx.success();
-            return fullMention;
-        } catch (TransactionFailureException txE) {
-            log.error("Cannot get Mention " + mentionNode.getId() + " from graph.");
-            log.error(txE.getMessage());
-        } catch (Exception e) {
-            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-            log.error("Ignoring Exception " + e.getMessage());
-            // Attempt to continue.
-        }
-        return null;
-    }
 
-    private Mention createMention(final GraphDatabaseService graphDb,
-                                  final Log log,
-                                  final Node mentionNode) {
-        try (Transaction tx = graphDb.beginTx()) {
-            final Mention mention = new Mention();
-            mention.setId(DataUtil.objectToString(mentionNode.getProperty(NAME_KEY)));
-            mention.setClassUri(DataUtil.getUri(graphDb, mentionNode));
-            mention.setBegin(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_BEGIN)));
-            mention.setEnd(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_END)));
-            mention.setNegated(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_NEGATED)));
-            mention.setUncertain(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_UNCERTAIN)));
-            mention.setGeneric(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_GENERIC)));
-            mention.setConditional(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_CONDITIONAL)));
-            mention.setHistoric(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_HISTORIC)));
-            mention.setTemporality(DataUtil.objectToString(mentionNode.getProperty(INSTANCE_TEMPORALITY)));
-            tx.success();
-            return mention;
-        } catch (TransactionFailureException txE) {
-            log.error("Cannot get Mention " + mentionNode.getId() + " from graph.");
-            log.error(txE.getMessage());
-        } catch (Exception e) {
-            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-            log.error("Ignoring Exception " + e.getMessage());
-            // Attempt to continue.
-        }
-        return null;
-    }
+   private Mention createMention( final GraphDatabaseService graphDb,
+                                 final Log log,
+                                 final Node mentionNode ) {
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Mention mention = new Mention();
+         mention.setId( DataUtil.objectToString( mentionNode.getProperty( NAME_KEY ) ) );
+         mention.setClassUri( DataUtil.getUri( graphDb, mentionNode ) );
+         for ( Relationship relation : mentionNode.getRelationships( Direction.INCOMING,
+                                                                     NOTE_HAS_TEXT_MENTION_RELATION ) ) {
+            final Node noteNode = relation.getOtherNode( mentionNode );
+            mention.setNoteId( DataUtil.objectToString( noteNode.getProperty( NAME_KEY ) ) );
+            mention.setNoteType( DataUtil.objectToString( noteNode.getProperty( NOTE_TYPE ) ) );
+         }
+         mention.setBegin( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_BEGIN ) ) );
+         mention.setEnd( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_END ) ) );
+         mention.setNegated( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_NEGATED ) ) );
+         mention.setUncertain( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_UNCERTAIN ) ) );
+         mention.setGeneric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_GENERIC ) ) );
+         mention.setConditional( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_CONDITIONAL ) ) );
+         mention.setHistoric( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_HISTORIC ) ) );
+         mention.setTemporality( DataUtil.objectToString( mentionNode.getProperty( INSTANCE_TEMPORALITY ) ) );
+         tx.success();
+         return mention;
+      } catch ( TransactionFailureException txE ) {
+         log.error( "Cannot get Mention " + mentionNode.getId() + " from graph." );
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception " + e.getMessage() );
+         // Attempt to continue.
+      }
+      return null;
+   }
+
+   private List<Mention> getMentions( final Collection<FullMention> fullMentions ) {
+      return fullMentions.stream()
+                         .map( FullMention::getMention )
+                         .collect( Collectors.toList() );
+   }
+
+
+   private List<MentionRelation> getRelations( final Collection<FullMention> fullMentions ) {
+      return fullMentions.stream()
+                         .map( FullMention::getRelations )
+                         .flatMap( Collection::stream )
+                         .collect( Collectors.toList() );
+   }
+
+
+   private List<MentionCoref> getCorefs( final Collection<FullMention> fullMentions ) {
+      final Map<String, Collection<String>> corefMap = new HashMap<>();
+      for ( FullMention mention : fullMentions ) {
+         mention.getCorefs().forEach( c -> corefMap.computeIfAbsent( c, d -> new HashSet<>() ).add( mention.getId() ) );
+      }
+      final List<MentionCoref> corefs = new ArrayList<>( corefMap.size() );
+      for ( Map.Entry<String, Collection<String>> entry : corefMap.entrySet() ) {
+         final MentionCoref coref = new MentionCoref();
+         coref.setId( entry.getKey() );
+         coref.setIdChain( entry.getValue().toArray( new String[ 0 ] ) );
+         corefs.add( coref );
+      }
+      return corefs;
+   }
+
+
+   /////////////////////////////////////////////////////////////////////////////////////////
+   //
+   //                            MENTION RELATION AND COREF HELPER CLASS
+   //
+   /////////////////////////////////////////////////////////////////////////////////////////
+
+
+   static private class FullMention {
+      private final Mention _mention;
+      private Collection<HalfRelation> _relations;
+      private Collection<String> _corefs;
+
+      private FullMention( final Mention mention ) {
+         _mention = mention;
+      }
+
 
     private List<Mention> getMentions(final Collection<FullMention> fullMentions) {
         return fullMentions.stream()
@@ -858,6 +900,7 @@ public enum NodeReader {
 
                     }
                 }
+
 
             }
         }
