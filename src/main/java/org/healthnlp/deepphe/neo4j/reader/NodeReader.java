@@ -532,6 +532,12 @@ public enum NodeReader {
          final Mention mention = new Mention();
          mention.setId( DataUtil.objectToString( mentionNode.getProperty( NAME_KEY ) ) );
          mention.setClassUri( DataUtil.getUri( graphDb, mentionNode ) );
+         for ( Relationship relation : mentionNode.getRelationships( Direction.INCOMING,
+                                                                     NOTE_HAS_TEXT_MENTION_RELATION ) ) {
+            final Node noteNode = relation.getOtherNode( mentionNode );
+            mention.setNoteId( DataUtil.objectToString( noteNode.getProperty( NAME_KEY ) ) );
+            mention.setNoteType( DataUtil.objectToString( noteNode.getProperty( NOTE_TYPE ) ) );
+         }
          mention.setBegin( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_BEGIN ) ) );
          mention.setEnd( DataUtil.objectToInt( mentionNode.getProperty( TEXT_SPAN_END ) ) );
          mention.setNegated( DataUtil.objectToBoolean( mentionNode.getProperty( INSTANCE_NEGATED ) ) );
