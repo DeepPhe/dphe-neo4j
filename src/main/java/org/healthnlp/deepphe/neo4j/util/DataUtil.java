@@ -194,6 +194,7 @@ final public class DataUtil {
     }
 
     static public String getRelationPrettyName( final String relationName ) {
+        if (relationName != null) {
         String hasOnly = relationName.replace( "Disease_", "" );
         hasOnly = hasOnly.replace( "Regimen_", "" );
         if ( hasOnly.toLowerCase().startsWith( "has_" ) ) {
@@ -220,6 +221,8 @@ final public class DataUtil {
             adjustedLength++;
         }
         return new String( Arrays.copyOf( adjusted, adjustedLength ) );
+        }
+        return null;
     }
 
 
