@@ -454,7 +454,11 @@ public enum NodeWriter {
          note.getSections().forEach( s -> addSectionInfo( graphDb, log, noteNode, s ) );
          note.getMentions().forEach( m -> addMentionInfo( graphDb, log, noteNode, m ) );
          note.getRelations().forEach( r -> addMentionRelation( graphDb, log, r ) );
-         note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
+         if (note.getCorefs() != null) {
+            note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
+         } else {
+            log.error("note.getCorefs is null, is this okay?");
+         }
 
          tx.success();
       } catch ( TransactionFailureException txE ) {

@@ -3,21 +3,21 @@ package org.healthnlp.deepphe.neo4j.reader;
 
 import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.node.*;
-import org.healthnlp.deepphe.neo4j.util.DataUtil;
-import org.healthnlp.deepphe.neo4j.util.SearchUtil;
-import org.healthnlp.deepphe.neo4j.util.TextFormatter;
+import org.healthnlp.deepphe.neo4j.util.*;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
+import scala.Int;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
-import static org.healthnlp.deepphe.neo4j.constant.RelationConstants.HAS_STAGE;
-import static org.healthnlp.deepphe.neo4j.constant.RelationConstants.HAS_TUMOR_TYPE;
+import static org.healthnlp.deepphe.neo4j.constant.RelationConstants.*;
 import static org.healthnlp.deepphe.neo4j.util.DataUtil.safeGetProperty;
 
 /**
@@ -32,6 +32,7 @@ public enum NodeReader {
         return INSTANCE;
     }
 
+     static private final Iterator<NewStructuredPatientData> randomStructuredPatientDataIterator =  new StructuredPatientDataGenerator(0).iterator();
 
     /////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -252,10 +253,18 @@ public enum NodeReader {
     }
 
 
+
+
+
     private NeoplasmSummary createCancer(final GraphDatabaseService graphDb,
                                          final Log log,
                                          final Node cancerNode) {
         final NeoplasmSummary cancer = new NeoplasmSummary();
+
+        cancer.setHer2(SearchUtil.getAttributeByNameAsString(graphDb, log, cancerNode, HAS_HER2_STATUS));
+        cancer.setEr(SearchUtil.getAttributeByNameAsString(graphDb, log, cancerNode, HAS_ER_STATUS));
+        cancer.setPr(SearchUtil.getAttributeByNameAsString(graphDb, log, cancerNode, HAS_PR_STATUS));
+
         try (Transaction tx = graphDb.beginTx()) {
             populateNeoplasm(graphDb, log, cancer, cancerNode);
             final List<NeoplasmSummary> tumors = new ArrayList<>();
@@ -577,13 +586,19 @@ public enum NodeReader {
         return null;
     }
 
-    private Mention createMention(final GraphDatabaseService graphDb,
-                                  final Log log,
-                                  final Node mentionNode) {
+    public Mention createMention(final GraphDatabaseService graphDb,
+                                 final Log log,
+                                 final Node mentionNode) {
         try (Transaction tx = graphDb.beginTx()) {
             final Mention mention = new Mention();
             mention.setId(DataUtil.objectToString(mentionNode.getProperty(NAME_KEY)));
             mention.setClassUri(DataUtil.getUri(graphDb, mentionNode));
+            for (Relationship relation : mentionNode.getRelationships(Direction.INCOMING,
+                    NOTE_HAS_TEXT_MENTION_RELATION)) {
+                final Node noteNode = relation.getOtherNode(mentionNode);
+                mention.setNoteId(DataUtil.objectToString(noteNode.getProperty(NAME_KEY)));
+                mention.setNoteType(DataUtil.objectToString(noteNode.getProperty(NOTE_TYPE)));
+            }
             mention.setBegin(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_BEGIN)));
             mention.setEnd(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_END)));
             mention.setNegated(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_NEGATED)));
@@ -636,7 +651,13 @@ public enum NodeReader {
     }
 
 
-    static private PatientInfo createPatientInfo(final Node patientNode) throws RuntimeException {
+    /////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //                            MENTION RELATION AND COREF HELPER CLASS
+    //
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    static private PatientInfo createPatientInfo(final Node patientNode) throws RuntimeException, ParseException {
         PatientInfo patientInfo = new PatientInfo();
 
         String patientId = DataUtil.objectToString(patientNode.getProperty(NAME_KEY));
@@ -645,67 +666,64 @@ public enum NodeReader {
             throw new RuntimeException("Node supplied to createSharedPatientProperties does not contain required property: " + NAME_KEY);
         }
 
+        NewStructuredPatientData structuredPatientData = randomStructuredPatientDataIterator.next();
+        patientInfo = populateNewRandomPatient(structuredPatientData, patientInfo);
         String nameValue = safeGetProperty(patientNode, PATIENT_NAME, PATIENT_NAME + "_property_not_found");
-        String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
-        String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, PATIENT_BIRTH_DATE + "_property_not_found");
-        String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, PATIENT_DEATH_DATE + "_property_not_found");
+       // String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
+        //String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, PATIENT_BIRTH_DATE + "_property_not_found");
+        //String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, PATIENT_DEATH_DATE + "_property_not_found");
 
-        patientInfo.setPatientId(patientId);
-        patientInfo.setPatientName(nameValue);
-        patientInfo.setGender(genderValue);
-        patientInfo.setBirthDate(birthValue);
+        //patientInfo.setPatientId(patientId);
+        //patientInfo.setPatientName(nameValue);
+        //patientInfo.setGender(genderValue);
+        //patientInfo.setBirthDate(birthValue);
 
         return patientInfo;
 
     }
 
-    //TODO: throwing generic exception, make it more specific
-    static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode) {
+    public static PatientInfo populateNewRandomPatient(NewStructuredPatientData structuredPatientData, PatientInfo patientInfo) throws ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
+        String fed = structuredPatientData.getFirstEncounterDate();
+        String led = structuredPatientData.getLastEncounterDate();
+        String dob = structuredPatientData.getBirthdate();
 
-        String nameValue = safeGetProperty(patientNode, PATIENT_NAME, "John Smith");
-        String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, "M");
+        Date fedDate = simpleDateFormat.parse(fed);
+        Date ledDate = simpleDateFormat.parse(led);
+        Date dobDate = simpleDateFormat.parse(dob);
 
-        String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, "2010-01-01");
-        String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, "2012-01-01");
-        String stageValue = safeGetProperty(patientNode, "stages", "Stage IA");
-
-        String firstEncounterDate = "2010-01-01";
-        String lastEncounterDate = "2015-01-06";
-        String firstEncounterAge = "15";
-        String lastEncounterAge = "37";
+        Integer ageAtFirstEncounter = Math.round((fedDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
+        Integer ageAtLastEncounter = Math.round((ledDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
 
         PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
         //patientSummaryAndStages.setPatientId(); how?
-        patientSummaryAndStages.setPatientName(nameValue);
-        patientSummaryAndStages.setBirthDate(birthValue);
-        patientSummaryAndStages.setFirstEncounterAge(firstEncounterAge);
-        patientSummaryAndStages.setGetFirstEncounterDate(firstEncounterDate);
-        patientSummaryAndStages.setLastEncounterAge(lastEncounterAge);
-        patientSummaryAndStages.setLastEncounterDate(lastEncounterDate);
-        patientSummaryAndStages.getStages().add("Stage IA");
+        patientInfo.setPatientName(structuredPatientData.getFirstname() + " " + structuredPatientData.getLastname());
+        patientInfo.setBirthDate(structuredPatientData.getBirthdate());
+        patientInfo.setFirstEncounterAge(ageAtFirstEncounter.toString());
+        patientInfo.setGetFirstEncounterDate(structuredPatientData.getFirstEncounterDate());
+        patientInfo.setLastEncounterAge(ageAtLastEncounter.toString());
+        patientInfo.setLastEncounterDate(structuredPatientData.getLastEncounterDate());
+        patientInfo.setGender(structuredPatientData.getGender());
+        patientInfo.setPatientId(structuredPatientData.getPatientId());
+        //patientSummaryAndStages.getStages().add("Stage IA");
+        return patientInfo;
 
-        final Map<String, Object> sharedPatientProperties = new HashMap<>();
-        // Currently the NAME_KEY works as patient ID - Joe
-        sharedPatientProperties.put("patientId",
-                DataUtil.objectToString(patientNode.getProperty(NAME_KEY)));
-        sharedPatientProperties.put("patientName", nameValue);
-        sharedPatientProperties.put("birthDate", birthValue);
-        // DataUtil.objectToString( birthValue );
-        sharedPatientProperties.put("firstEncounterDate", firstEncounterDate);
-        //DataUtil.objectToString( patientNode.getProperty( PATIENT_FIRST_ENCOUNTER ) ) );
-        sharedPatientProperties.put("lastEncounterDate", lastEncounterDate);
-        //  DataUtil.objectToString( patientNode.getProperty( PATIENT_LAST_ENCOUNTER ) ) );
-        sharedPatientProperties.put("firstEncounterAge", firstEncounterAge);
-//              TextFormatter.getPatientEncounterAge(
-//                      DataUtil.objectToString( patientNode.getProperty( PATIENT_BIRTH_DATE ) ),
-//                      DataUtil.objectToString(
-//                              patientNode.getProperty( PATIENT_FIRST_ENCOUNTER ) ) ) );
-        sharedPatientProperties.put("lastEncounterAge", lastEncounterAge);
-//              TextFormatter.getPatientEncounterAge(
-//                      DataUtil.objectToString( patientNode.getProperty( PATIENT_BIRTH_DATE ) ),
-//                      DataUtil.objectToString(
-//                              patientNode.getProperty( PATIENT_LAST_ENCOUNTER ) ) ) );
+
+    }
+
+    //TODO: throwing generic exception, make it more specific
+    static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode) throws ParseException {
+        //hacky but okay for now
+        NewStructuredPatientData structuredPatientData = randomStructuredPatientDataIterator.next();
+
+
+        PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
+
+        //patientSummaryAndStages.setPatientId(); how?
+
+        populateNewRandomPatient(structuredPatientData, patientSummaryAndStages);
+        //patientSummaryAndStages.getStages().add("Stage IA");
 
         return patientSummaryAndStages;
     }
@@ -756,8 +774,9 @@ public enum NodeReader {
                 patientSummaryAndStagesList.getPatientSummaryAndStages().add(patientSummaryAndStages);
             }
             tx.success();
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Failed to call getCohortData()");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call getCohortData():" + e.getMessage());
         }
         return patientSummaryAndStagesList;
     }
@@ -831,6 +850,7 @@ public enum NodeReader {
                 newCancerFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newCancerFactInfo.getName()));
                 newCancerFact.setCancerFactInfo(newCancerFactInfo);
                 cancerFacts.add(newCancerFact);
+
             }
 
             for (NeoplasmSummary tumor : cancer.getSubSummaries()) {
@@ -1041,7 +1061,7 @@ public enum NodeReader {
     }
 
 
-    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
+    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode)  {
 
         final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
         final List<NewReport> reportList = new ArrayList<>();
@@ -1064,7 +1084,11 @@ public enum NodeReader {
             reportList.add(report);
         }
         NewPatientSummary newPatientSummary = new NewPatientSummary();
-        newPatientSummary.setPatientInfo(createPatientInfo(patientNode));
+        try {
+            newPatientSummary.setPatientInfo(createPatientInfo(patientNode));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         newPatientSummary.setReportData(reportList);
         return newPatientSummary;
 
@@ -1158,36 +1182,39 @@ public enum NodeReader {
     // TODO - move to ReadFunctions class.
 
     public FactInfoAndGroupedTextProvenances getFact(GraphDatabaseService graphDb, Log log, @Name("patientId") String patientId, @Name("factId") String factId) {
-    //public Map<String, Object> getFact(GraphDatabaseService graphDb, Log log, @Name("patientId") String patientId, @Name("factId") String factId) {
+        //public Map<String, Object> getFact(GraphDatabaseService graphDb, Log log, @Name("patientId") String patientId, @Name("factId") String factId) {
         FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances = new FactInfoAndGroupedTextProvenances();
         List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
 
-
-    for ( NeoplasmSummary cancer : cancers) {
+        List<NewMentionedTerm> mentionedTerms = new ArrayList<NewMentionedTerm>();
+        for (NeoplasmSummary cancer : cancers) {
             List<NeoplasmSummary> tumors = cancer.getSubSummaries();
-           for (NeoplasmSummary tumorSummary : tumors) {
-               List<NeoplasmAttribute> tumorFacts = tumorSummary.getAttributes();
-               for (NeoplasmAttribute fact: tumorFacts) {
-                   if (fact.getId().equalsIgnoreCase(factId)) {  //this currently never matches...
-                       //use direct evidence to build the "mention" datastructure
-                       for (Mention mention: fact.getDirectEvidence()) {
-                           NewMentionedTerm mentionedTerm = new NewMentionedTerm();
-                           //sean will add report info to the directEvidence
-
-
-                           mentionedTerm.setTerm(mention.getClassUri());
-                           //mentionedTerm.setReportId(;
-                           //mentionedTerm.setReportType(;
-                           //mentionedTerm.setReportName(
-                           mentionedTerm.setBegin(mention.getBegin());
-                           mentionedTerm.setEnd(mention.getEnd());
-                        System.out.println("FactId: " + factId + "\tMention: " + mention.getClassUri());
-                       }
-                   }
-               }
-           }
+            for (NeoplasmSummary tumorSummary : tumors) {
+                List<NeoplasmAttribute> tumorFacts = tumorSummary.getAttributes();
+                for (NeoplasmAttribute fact : tumorFacts) {
+                    if (fact.getId().equalsIgnoreCase(factId)) {  //this currently never matches...
+                        //use direct evidence to build the "mention" datastructure
+                        NewFactInfo newFactInfo = new NewFactInfo();
+                        newFactInfo.setName(fact.getName());
+                        newFactInfo.setId(fact.getId());
+                        newFactInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
+                        factInfoAndGroupedTextProvenances.setSourceFact(newFactInfo);
+                        for (Mention mention : fact.getDirectEvidence()) {
+                            NewMentionedTerm mentionedTerm = new NewMentionedTerm();
+                            mentionedTerm.setTerm(mention.getClassUri());
+                            mentionedTerm.setReportId(mention.getNoteId());
+                            mentionedTerm.setReportType(mention.getNoteType());
+                            mentionedTerm.setReportName(mention.getNoteId());
+                            mentionedTerm.setBegin(mention.getBegin());
+                            mentionedTerm.setEnd(mention.getEnd());
+                            mentionedTerms.add(mentionedTerm);
+                            System.out.println("FactId: " + factId + "\tMention: " + mention.getClassUri());
+                        }
+                    }
+                }
+            }
         }
-
+        factInfoAndGroupedTextProvenances.setMentionedTerms(mentionedTerms);
 //
 //        final Map<String, Object> factData = new HashMap<>();
 //        try (Transaction tx = graphDb.beginTx()) {
@@ -1258,9 +1285,34 @@ public enum NodeReader {
 //        }
         return factInfoAndGroupedTextProvenances;
     }
-
-
-
-
 }
+//clinic vs pathologic, ultrasound,
+//T = tumor size (tx = not measured, t0=in situ, 1,2,3,4...)
+//N = nodes (x, 0, 1, 2, 3)
+//M = metastatic tumors (x, 0, 1)
 
+//T0
+//id of the attribute, category
+//classUri,
+//category name, T
+//value
+//classUri =
+
+//"id": "T0_Stage_1625662832645",
+//        "classUri": "T0_Stage",
+//        "name": "t",
+//        "value": "T0",
+//        "directEvidence": [
+//        {
+//        "id": "patient03_report005_SP_M_189",
+//        "classUri": "T0_Stage",
+//        "begin": 11078,
+//        "end": 11082,
+//        "negated": false,
+//        "uncertain": false,
+//        "generic": false,
+//        "conditional": false,
+//        "historic": false,
+//        "temporality": ""
+//        }
+//        ],

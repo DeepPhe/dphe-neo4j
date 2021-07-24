@@ -6,6 +6,7 @@ import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.logging.Log;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +27,25 @@ final public class SearchUtil {
    }
 
 
+    static public String getAttributeByNameAsString(final GraphDatabaseService graphDb,
+                                            final Log log,
+                                            final Node cancerNode,
+                                            String attribute) {
+
+      List<String> attributeList = new ArrayList<>();
+      SearchUtil.getOutRelatedNodes(graphDb, cancerNode, NEOPLASM_HAS_ATTRIBUTE_RELATION)
+              .stream()
+              .filter(n -> DataUtil.objectToString(n.getProperty(ATTRIBUTE_NAME)).equals(attribute))
+              .map(n -> DataUtil.objectToString(n.getProperty(ATTRIBUTE_VALUE)))
+              .forEach(attributeList::add);
+      if (attributeList.size() > 0) {
+         return String.join(" --- ", attributeList);
+      } else {
+         return null;
+      }
+
+
+   }
    /**
     * @param graphDb graph database service.  Passed manually so that it can be injected with procedure calls.
     * @param rootUri uri for the root of a branch
