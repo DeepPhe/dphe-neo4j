@@ -1,9 +1,13 @@
 package org.healthnlp.deepphe.neo4j.util;
 
+//for monday...i think the patient summary is generating the random patient ids, and then when the timeline goes to find that patient it's generating new patient ids and cant find a match
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.healthnlp.deepphe.neo4j.node.NewStructuredPatientData;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.YearMonth;
@@ -59,12 +63,12 @@ public class StructuredPatientDataGenerator implements Iterable<NewStructuredPat
     }
 
 
-    private String getDateOfEncounter(long ageInMillisRightNow, long millisSinceVisit) {
+    private String getDateOfEncounter(long ageInMillisRightNow, long ageAtTimeOfVisitInMillis) {
         Calendar c = new GregorianCalendar();
         c.add(Calendar.YEAR, -5);
         Integer yearsSinceBirth = Math.round(ageInMillisRightNow / MILLS_IN_A_YEAR);
-        Integer yearsSinceEncounter = Math.round(millisSinceVisit / MILLS_IN_A_YEAR);
-        c.add(Calendar.YEAR, yearsSinceBirth  - yearsSinceEncounter);
+        Integer ageAtEncounter = Math.round(ageAtTimeOfVisitInMillis / MILLS_IN_A_YEAR);
+        c.add(Calendar.YEAR, ageAtEncounter-yearsSinceBirth);
         c.set(Calendar.MONTH, monthRand.nextInt(11)+1);
         YearMonth yearMonthObject = YearMonth.of(c.get(Calendar.YEAR), c.get(Calendar.MONTH));
         int daysInMonth = yearMonthObject.lengthOfMonth(); //28
@@ -80,7 +84,7 @@ public class StructuredPatientDataGenerator implements Iterable<NewStructuredPat
     }
 
     private String getNextLastEncounterDate(long ageInMillisRightNow) {
-        long millisSinceLastVisit =  MILLS_IN_A_YEAR * Math.round(lastEncounterDateRand.nextGaussian() * STDDEV_FOR_ENCOUNTERS_IN_YEARS + MEAN_FOR_ENCOUNTERS_IN_YEARS);
+        long millisSinceLastVisit =  Math.abs(MILLS_IN_A_YEAR * Math.round(lastEncounterDateRand.nextGaussian() * STDDEV_FOR_ENCOUNTERS_IN_YEARS + MEAN_FOR_ENCOUNTERS_IN_YEARS));
         long ageAtLastVisitInMillis = ageInMillisRightNow + millisSinceLastVisit;
         return getDateOfEncounter(ageInMillisRightNow, ageAtLastVisitInMillis);
     }
@@ -101,7 +105,7 @@ public class StructuredPatientDataGenerator implements Iterable<NewStructuredPat
         return simpleDateFormat.format(c.getTime());
     }
 
-    private String getNextId() {
+    public String getNextPatientId() {
         DecimalFormat decimalFormat = new DecimalFormat("00");
         return "patient" + decimalFormat.format(patientId++);
     }
@@ -113,7 +117,7 @@ public class StructuredPatientDataGenerator implements Iterable<NewStructuredPat
         structuredPatientData.setFirstname(getNextFirstName());
         structuredPatientData.setLastname(getNextLastName());
         structuredPatientData.setGender("F");
-        structuredPatientData.setPatientId(getNextId());
+        structuredPatientData.setPatientId(getNextPatientId());
         structuredPatientData.setFirstEncounterDate(getNextFirstEncounterDate(ageInMillisRightNow));
         structuredPatientData.setLastEncounterDate(getNextLastEncounterDate(ageInMillisRightNow));
         return structuredPatientData;
@@ -122,9 +126,26 @@ public class StructuredPatientDataGenerator implements Iterable<NewStructuredPat
     public static void main(String[] args) {
         StructuredPatientDataGenerator structuredPatientDataGenerator = new StructuredPatientDataGenerator(0);
 
-        System.out.println(structuredPatientDataGenerator.next());
-        System.out.println(structuredPatientDataGenerator.next());
-        System.out.println(structuredPatientDataGenerator.next());
+        List<NewStructuredPatientData> newStructuredPatientData = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+         newStructuredPatientData.add((structuredPatientDataGenerator.next()));
+        }
+
+        for (int i = 0; i <= 7; i++) {
+             NewStructuredPatientData patient = structuredPatientDataGenerator.next();
+             patient.setPatientId("fake_patient"+i);
+            newStructuredPatientData.add(patient);
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(newStructuredPatientData);
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter("../dphe-neo4j-plugin/fake_patient_structured_data.json"));
+            bw.write(json);
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 

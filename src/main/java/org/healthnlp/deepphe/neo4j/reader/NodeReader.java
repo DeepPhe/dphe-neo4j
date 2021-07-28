@@ -1,7 +1,11 @@
 package org.healthnlp.deepphe.neo4j.reader;
 
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
+import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.healthnlp.deepphe.neo4j.node.*;
 import org.healthnlp.deepphe.neo4j.util.*;
 import org.neo4j.graphdb.*;
@@ -11,6 +15,8 @@ import org.neo4j.procedure.Name;
 import org.neo4j.procedure.UserFunction;
 import scala.Int;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,8 +37,6 @@ public enum NodeReader {
     static public NodeReader getInstance() {
         return INSTANCE;
     }
-
-     static private final Iterator<NewStructuredPatientData> randomStructuredPatientDataIterator =  new StructuredPatientDataGenerator(0).iterator();
 
     /////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -87,8 +91,12 @@ public enum NodeReader {
     public Patient getPatient(final GraphDatabaseService graphDb,
                               final Log log,
                               final String patientId) {
+
         try (Transaction tx = graphDb.beginTx()) {
             final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+            if (patientNode == null) {
+                return null;
+            }
             Patient patient = getPatient(graphDb, log, patientNode, patientId);
             tx.success();
             return patient;
@@ -119,34 +127,38 @@ public enum NodeReader {
         patient.setGender("");
         patient.setName(patientId);
         final List<Note> notes = getNotes(graphDb, log, patientNode);
+        List<String> patientIds = new ArrayList<>();
+        patientIds.add(patientId);
+       // final List<NewPatientDiagnosis> diagnoses = getDiagnosis(graphDb, log, patientIds);
         patient.setNotes(notes);
+     //   patient.setDiagnoses(diagnoses);
         return patient;
     }
 
 
-    public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
-                                            final Log log,
-                                            final String patientId) {
-        try (Transaction tx = graphDb.beginTx()) {
-            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
-            if (patientNode == null) {
-                log.error("No patient node for " + patientId);
-                tx.success();
-                return null;
-            }
-            PatientSummary patientSummary = getPatientSummary(graphDb, log, patientNode, patientId);
-            tx.success();
-            return patientSummary;
-        } catch (TransactionFailureException txE) {
-            log.error("Cannot get patient " + patientId + " from graph.");
-            log.error(txE.getMessage());
-        } catch (Exception e) {
-            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-            log.error("Ignoring Exception " + e.getMessage());
-            // Attempt to continue.
-        }
-        return null;
-    }
+//    public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
+//                                            final Log log,
+//                                            final String patientId) {
+//        try (Transaction tx = graphDb.beginTx()) {
+//            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+//            if (patientNode == null) {
+//                log.error("No patient node for " + patientId);
+//                tx.success();
+//                return null;
+//            }
+//            PatientSummary patientSummary = getPatientSummary(graphDb, log, patientNode, patientId);
+//            tx.success();
+//            return patientSummary;
+//        } catch (TransactionFailureException txE) {
+//            log.error("Cannot get patient " + patientId + " from graph.");
+//            log.error(txE.getMessage());
+//        } catch (Exception e) {
+//            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+//            log.error("Ignoring Exception " + e.getMessage());
+//            // Attempt to continue.
+//        }
+//        return null;
+//    }
 
 
     public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
@@ -251,9 +263,6 @@ public enum NodeReader {
         }
         return cancers;
     }
-
-
-
 
 
     private NeoplasmSummary createCancer(final GraphDatabaseService graphDb,
@@ -415,6 +424,56 @@ public enum NodeReader {
         return badNote;
     }
 
+
+//    private List<NewPatientDiagnosis> getDiagnosis(final GraphDatabaseService graphDb,
+//                                                   final Log log,
+//                                                   final List<String> patientIds) {
+//
+//        final List<NewPatientDiagnosis> patientDiagnosis = new ArrayList<>();
+//        final Map<String, String> diagnosisGroupNames = UriConstants.getDiagnosisGroupNames(graphDb);
+//
+//        try (Transaction tx = graphDb.beginTx()) {
+//            for (String patientId : patientIds) {
+//
+//                final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+//
+//                if (patientNode == null) {
+//                    continue;
+//                }
+//                final List<String> diagnoses = new ArrayList<>();
+//                final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes(graphDb, patientNode,
+//                        SUBJECT_HAS_CANCER_RELATION);
+//                for (Node cancerNode : cancerNodes) {
+//                    diagnoses.add(DataUtil.getPreferredText(graphDb, cancerNode));
+//                }
+//                Collections.sort(diagnoses);
+//
+//                final Map<String, Object> map = new HashMap<>();
+//                map.put("patientId", patientId);
+//                map.put("diagnosis", diagnoses);
+//                final Collection<String> diagnosisGroups
+//                        = diagnoses.stream()
+//                        .map(d -> diagnosisGroupNames.getOrDefault(d, "Unknown"))
+//                        .distinct()
+//                        .sorted()
+//                        .collect(Collectors.toList());
+//
+//                map.put("diagnosisGroups", diagnosisGroups);
+//                // Add to the list
+//                NewPatientDiagnosis patientdx = new NewPatientDiagnosis();
+//                patientdx.setDiagnosis(diagnoses);
+//                patientdx.setDiagnosisGroups(new ArrayList<>(diagnosisGroups));
+//                patientdx.setPatientId(patientId);
+//                patientDiagnosis.add(patientdx);
+//
+//
+//            }
+//            tx.success();
+//        }
+//
+//        return patientDiagnosis;
+//
+//    }
 
     private List<Note> getNotes(final GraphDatabaseService graphDb,
                                 final Log log,
@@ -666,10 +725,10 @@ public enum NodeReader {
             throw new RuntimeException("Node supplied to createSharedPatientProperties does not contain required property: " + NAME_KEY);
         }
 
-        NewStructuredPatientData structuredPatientData = randomStructuredPatientDataIterator.next();
+        NewStructuredPatientData structuredPatientData = getStructuredPatientDataForPatientId(patientId);
         patientInfo = populateNewRandomPatient(structuredPatientData, patientInfo);
-        String nameValue = safeGetProperty(patientNode, PATIENT_NAME, PATIENT_NAME + "_property_not_found");
-       // String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
+        //String nameValue = safeGetProperty(patientNode, PATIENT_NAME, PATIENT_NAME + "_property_not_found");
+        // String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
         //String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, PATIENT_BIRTH_DATE + "_property_not_found");
         //String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, PATIENT_DEATH_DATE + "_property_not_found");
 
@@ -682,7 +741,8 @@ public enum NodeReader {
 
     }
 
-    public static PatientInfo populateNewRandomPatient(NewStructuredPatientData structuredPatientData, PatientInfo patientInfo) throws ParseException {
+    public static PatientInfo populateNewRandomPatient(NewStructuredPatientData structuredPatientData, PatientInfo
+            patientInfo) throws ParseException {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         String fed = structuredPatientData.getFirstEncounterDate();
@@ -697,7 +757,7 @@ public enum NodeReader {
         Integer ageAtLastEncounter = Math.round((ledDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
 
         PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
-        //patientSummaryAndStages.setPatientId(); how?
+        patientInfo.setPatientId(structuredPatientData.getPatientId());
         patientInfo.setPatientName(structuredPatientData.getFirstname() + " " + structuredPatientData.getLastname());
         patientInfo.setBirthDate(structuredPatientData.getBirthdate());
         patientInfo.setFirstEncounterAge(ageAtFirstEncounter.toString());
@@ -705,30 +765,47 @@ public enum NodeReader {
         patientInfo.setLastEncounterAge(ageAtLastEncounter.toString());
         patientInfo.setLastEncounterDate(structuredPatientData.getLastEncounterDate());
         patientInfo.setGender(structuredPatientData.getGender());
-        patientInfo.setPatientId(structuredPatientData.getPatientId());
         //patientSummaryAndStages.getStages().add("Stage IA");
         return patientInfo;
 
 
     }
 
-    //TODO: throwing generic exception, make it more specific
-    static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode) throws ParseException {
-        //hacky but okay for now
-        NewStructuredPatientData structuredPatientData = randomStructuredPatientDataIterator.next();
+    public static NewStructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
+        Gson gson = new Gson();
+        try {
+            JsonReader reader = new JsonReader(new FileReader("/Users/johnlevander/dev/dphe-neo4j-plugin/fake_patient_structured_data.json"));
+            List<NewStructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<NewStructuredPatientData>>() {
+            }.getType());
+            for (NewStructuredPatientData structuredPatientData : data) {
+                if (structuredPatientData.getPatientId().equals(actualPatientId)) {
+                    return structuredPatientData;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
 
+    }
+
+    //TODO: throwing generic exception, make it more specific
+    static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode) throws
+            ParseException {
+        //hacky but okay for now
 
         PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
-
+        String actualPatientId = DataUtil.objectToString(patientNode.getProperty(NAME_KEY));
         //patientSummaryAndStages.setPatientId(); how?
 
-        populateNewRandomPatient(structuredPatientData, patientSummaryAndStages);
+        populateNewRandomPatient(getStructuredPatientDataForPatientId(actualPatientId), patientSummaryAndStages);
         //patientSummaryAndStages.getStages().add("Stage IA");
 
         return patientSummaryAndStages;
     }
 
-    public PatientSummaryAndStagesList patientSummaryAndStagesList(GraphDatabaseService graphDb, Log log, boolean includeStages) {
+    public PatientSummaryAndStagesList patientSummaryAndStagesList(GraphDatabaseService graphDb, Log log,
+                                                                   boolean includeStages) {
         PatientSummaryAndStagesList patientSummaryAndStagesList = new PatientSummaryAndStagesList();
         try (Transaction tx = graphDb.beginTx()) {
             // DataUtil.getAllPatientNodes() is supposed to return all unique patients
@@ -811,7 +888,8 @@ public enum NodeReader {
     }
 
     //should be using getAttributes()
-    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String
+            patientId) {
 
         NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
         List<NewCancerSummary> cancers = new ArrayList<>();
@@ -1035,8 +1113,14 @@ public enum NodeReader {
 //        return newCancerAndTumorSummary;
 //    }
 
+    public List<NewPatientSummary> getPatientSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+        return DataUtil.getAllPatientNodes(graphDb)
+                .stream()
+                .map(n -> createNewPatientSummary(graphDb, n))
+                .filter(n -> n.getPatientInfo().getPatientId().equals(patientId))
+                .collect(Collectors.toList());
+    }
 
-    //asdf
     public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
 
         return DataUtil.getAllPatientNodes(graphDb)
@@ -1061,7 +1145,7 @@ public enum NodeReader {
     }
 
 
-    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode)  {
+    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
 
         final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
         final List<NewReport> reportList = new ArrayList<>();
@@ -1181,7 +1265,8 @@ public enum NodeReader {
     // TODO - Modify this method to populate the bean and gson it up as the return.
     // TODO - move to ReadFunctions class.
 
-    public FactInfoAndGroupedTextProvenances getFact(GraphDatabaseService graphDb, Log log, @Name("patientId") String patientId, @Name("factId") String factId) {
+    public FactInfoAndGroupedTextProvenances getFact(GraphDatabaseService graphDb, Log
+            log, @Name("patientId") String patientId, @Name("factId") String factId) {
         //public Map<String, Object> getFact(GraphDatabaseService graphDb, Log log, @Name("patientId") String patientId, @Name("factId") String factId) {
         FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances = new FactInfoAndGroupedTextProvenances();
         List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);

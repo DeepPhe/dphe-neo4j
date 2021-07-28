@@ -88,6 +88,7 @@ public enum TestServiceFactory {
       final Patient patient = new Patient();
       patient.setId( id );
       patient.setNotes( Collections.emptyList() );
+      patient.setDiagnoses( Collections.emptyList());
       return patient;
    }
 

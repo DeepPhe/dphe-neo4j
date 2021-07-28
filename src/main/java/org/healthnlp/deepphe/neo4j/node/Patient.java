@@ -15,6 +15,15 @@ public class Patient {
    private String birth;
    private String death;
    private List<Note> notes;
+   private List<NewPatientDiagnosis> diagnoses;
+
+   public List<NewPatientDiagnosis> getDiagnoses() {
+      return diagnoses;
+   }
+
+   public void setDiagnoses(List<NewPatientDiagnosis> diagnoses) {
+      this.diagnoses = diagnoses;
+   }
 
    public String getId() {
       return id;
