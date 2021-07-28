@@ -4,15 +4,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-//okay this is a good place to start tomorrow...I need the patientInfo stuff but not stages...
 public class PatientInfoAndStages extends PatientInfo implements Serializable {
-//    private String patientId;
-//    private String patientName;
-//    private String birthDate;
-//    private String lastEncounterAge;
-//    private String firstEncounterAge;
-//    private String lastEncounterDate;
-//    private String getFirstEncounterDate;
+
+    public PatientInfoAndStages(PatientInfo patientInfo) {
+        setPatientId(patientInfo.getPatientId());
+        setPatientName(patientInfo.getPatientName());
+        setGender(patientInfo.getGender());
+        setBirthDate(patientInfo.getBirthDate());
+        setFirstEncounterAge(patientInfo.getFirstEncounterAge());
+        setFirstEncounterDate(patientInfo.getFirstEncounterDate());
+        setLastEncounterAge(patientInfo.getLastEncounterAge());
+        setLastEncounterDate(patientInfo.getLastEncounterDate());
+    }
     private List<String> stages;
 
     public List<String> getStages() {

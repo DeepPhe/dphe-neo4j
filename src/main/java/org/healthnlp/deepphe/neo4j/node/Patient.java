@@ -15,14 +15,23 @@ public class Patient {
    private String birth;
    private String death;
    private List<Note> notes;
-   private List<NewPatientDiagnosis> diagnoses;
+   private PatientDiagnosis diagnosis;
+   private List<BiomarkerSummary> biomarkers;
 
-   public List<NewPatientDiagnosis> getDiagnoses() {
-      return diagnoses;
+   public List<BiomarkerSummary> getBiomarkers() {
+      return biomarkers;
    }
 
-   public void setDiagnoses(List<NewPatientDiagnosis> diagnoses) {
-      this.diagnoses = diagnoses;
+   public void setBiomarkers(List<BiomarkerSummary> biomarkers) {
+      this.biomarkers = biomarkers;
+   }
+
+   public PatientDiagnosis getDiagnoses() {
+      return diagnosis;
+   }
+
+   public void setDiagnoses(PatientDiagnosis diagnoses) {
+      this.diagnosis = diagnoses;
    }
 
    public String getId() {

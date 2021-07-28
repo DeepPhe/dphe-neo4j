@@ -7,7 +7,7 @@ public class PatientInfo {
     private String lastEncounterAge;
     private String firstEncounterAge;
     private String lastEncounterDate;
-    private String getFirstEncounterDate;
+    private String firstEncounterDate;
 
     public String getGender() {
         return gender;
@@ -67,11 +67,11 @@ public class PatientInfo {
         this.lastEncounterDate = lastEncounterDate;
     }
 
-    public String getGetFirstEncounterDate() {
-        return getFirstEncounterDate;
+    public String getFirstEncounterDate() {
+        return firstEncounterDate;
     }
 
-    public void setGetFirstEncounterDate(String getFirstEncounterDate) {
-        this.getFirstEncounterDate = getFirstEncounterDate;
+    public void setFirstEncounterDate(String firstEncounterDate) {
+        this.firstEncounterDate = firstEncounterDate;
     }
 }

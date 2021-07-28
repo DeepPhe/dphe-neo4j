@@ -1,6 +1,6 @@
 package org.healthnlp.deepphe.neo4j.node;
 
-public class NewMentionedTerm {
+public class MentionedTerm {
     String reportId;
     String reportName;
     String reportType;

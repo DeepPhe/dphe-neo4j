@@ -10,32 +10,24 @@ import java.util.List;
  */
 public class PatientSummary {
 
-   private String id;
-   private Patient patient;
-   private List<NeoplasmSummary> neoplasms;
+   PatientInfo patientInfo;
+   List<Report> reportData;
 
-   public String getId() {
-      return id;
+
+   public PatientInfo getPatientInfo() {
+      return patientInfo;
    }
 
-   public void setId( final String id ) {
-      this.id = id;
+   public void setPatientInfo(PatientInfo patientInfo) {
+      this.patientInfo = patientInfo;
    }
 
-   public Patient getPatient() {
-      return patient;
+   public List<Report> getReportData() {
+      return reportData;
    }
 
-   public void setPatient( final Patient patient ) {
-      this.patient = patient;
-   }
-
-   public List<NeoplasmSummary> getNeoplasms() {
-      return neoplasms;
-   }
-
-   public void setNeoplasms( final List<NeoplasmSummary> neoplasms ) {
-      this.neoplasms = neoplasms;
+   public void setReportData(List<Report> reportData) {
+      this.reportData = reportData;
    }
 
 

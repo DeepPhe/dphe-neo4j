@@ -2,10 +2,10 @@ package org.healthnlp.deepphe.neo4j.node;
 
 import java.util.List;
 
-public class NewTumorSummary {
+public class TumorSummary {
     String tumorId;
     String hasTumorType;
-    List<NewTumorFact> tumorFacts;
+    List<TumorFact> tumorFacts;
 
     public String getTumorId() {
         return tumorId;
@@ -23,11 +23,11 @@ public class NewTumorSummary {
         this.hasTumorType = hasTumorType;
     }
 
-    public List<NewTumorFact> getTumorFacts() {
+    public List<TumorFact> getTumorFacts() {
         return tumorFacts;
     }
 
-    public void setTumorFacts(List<NewTumorFact> tumorFacts) {
+    public void setTumorFacts(List<TumorFact> tumorFacts) {
         this.tumorFacts = tumorFacts;
     }
 }

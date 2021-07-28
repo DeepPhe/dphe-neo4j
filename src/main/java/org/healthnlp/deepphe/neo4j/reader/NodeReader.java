@@ -4,16 +4,14 @@ package org.healthnlp.deepphe.neo4j.reader;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.healthnlp.deepphe.neo4j.node.*;
-import org.healthnlp.deepphe.neo4j.util.*;
+import org.healthnlp.deepphe.neo4j.util.DataUtil;
+import org.healthnlp.deepphe.neo4j.util.SearchUtil;
+import org.healthnlp.deepphe.neo4j.util.StructuredPatientDataGenerator;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
-import org.neo4j.procedure.Description;
 import org.neo4j.procedure.Name;
-import org.neo4j.procedure.UserFunction;
-import scala.Int;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -38,21 +36,16 @@ public enum NodeReader {
         return INSTANCE;
     }
 
+    static public final Collection<String> BIOMARKERS = Arrays.asList(
+            HAS_ER_STATUS,
+            HAS_PR_STATUS,
+            HAS_HER2_STATUS);
+
     /////////////////////////////////////////////////////////////////////////////////////////
     //
     //                            COHORT DATA
     //
     /////////////////////////////////////////////////////////////////////////////////////////
-
-//seans slightly older version
-//   public List<PatientSummary> getPatientSummaries( final GraphDatabaseService graphDb,
-//                                                    final Log log ) {
-//      return DataUtil.getAllPatientNodes( graphDb )
-//                     .stream()
-//                     .map( n -> getPatientSummary( graphDb, log, n ) )
-//                     .filter( Objects::nonNull )
-//                     .collect( Collectors.toList() );
-//   }
 
     public List<PatientDiagnosis> getPatientDiagnoses(final GraphDatabaseService graphDb,
                                                       final Log log) {
@@ -68,9 +61,14 @@ public enum NodeReader {
                                                           final Log log,
                                                           final Node patientNode) {
         final String patientId = DataUtil.getNodeName(graphDb, patientNode);
-        return getCancers(graphDb, log, patientId).stream()
-                .map(c -> createPatientDiagnosis(patientId, c))
-                .collect(Collectors.toList());
+        List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
+        if (cancers != null) {
+            return cancers.stream()
+                    .map(c -> createPatientDiagnosis(patientId, c))
+                    .collect(Collectors.toList());
+        } else {
+            return null;
+        }
     }
 
     static private PatientDiagnosis createPatientDiagnosis(final String patientId, final NeoplasmSummary cancer) {
@@ -80,13 +78,11 @@ public enum NodeReader {
         return diagnosis;
     }
 
-
     /////////////////////////////////////////////////////////////////////////////////////////
     //
     //                            PATIENT DATA
     //
     /////////////////////////////////////////////////////////////////////////////////////////
-
 
     public Patient getPatient(final GraphDatabaseService graphDb,
                               final Log log,
@@ -126,40 +122,18 @@ public enum NodeReader {
         patient.setDeath("");
         patient.setGender("");
         patient.setName(patientId);
+
         final List<Note> notes = getNotes(graphDb, log, patientNode);
-        List<String> patientIds = new ArrayList<>();
-        patientIds.add(patientId);
-       // final List<NewPatientDiagnosis> diagnoses = getDiagnosis(graphDb, log, patientIds);
         patient.setNotes(notes);
-     //   patient.setDiagnoses(diagnoses);
+
+        final PatientDiagnosis diagnosis = getDiagnosis(graphDb, log, patientId);
+        patient.setDiagnoses(diagnosis);
+
+        final List<BiomarkerSummary> biomarkers = getBiomarkers(graphDb, log, patientId);
+        patient.setBiomarkers(biomarkers);
+
         return patient;
     }
-
-
-//    public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
-//                                            final Log log,
-//                                            final String patientId) {
-//        try (Transaction tx = graphDb.beginTx()) {
-//            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
-//            if (patientNode == null) {
-//                log.error("No patient node for " + patientId);
-//                tx.success();
-//                return null;
-//            }
-//            PatientSummary patientSummary = getPatientSummary(graphDb, log, patientNode, patientId);
-//            tx.success();
-//            return patientSummary;
-//        } catch (TransactionFailureException txE) {
-//            log.error("Cannot get patient " + patientId + " from graph.");
-//            log.error(txE.getMessage());
-//        } catch (Exception e) {
-//            // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-//            log.error("Ignoring Exception " + e.getMessage());
-//            // Attempt to continue.
-//        }
-//        return null;
-//    }
-
 
     public PatientSummary getPatientSummary(final GraphDatabaseService graphDb,
                                             final Log log,
@@ -205,8 +179,6 @@ public enum NodeReader {
     //
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    //3
-
     private List<NeoplasmSummary> getCancers(final GraphDatabaseService graphDb,
                                              final Log log,
                                              final String patientId) {
@@ -216,7 +188,6 @@ public enum NodeReader {
             final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
             if (patientNode == null) {
                 log.error("Error in getCancers().  Looking for node named " + patientId + " but it does not exist.");
-                //  tx.success();
                 return null;
             }
             SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_CANCER_RELATION)
@@ -340,15 +311,12 @@ public enum NodeReader {
         return attributes;
     }
 
-    //defunct?
     private NeoplasmAttribute createAttribute(final GraphDatabaseService graphDb,
                                               final Log log,
                                               final Node attributeNode) {
         try (Transaction tx = graphDb.beginTx()) {
 
             final NeoplasmAttribute attribute = new NeoplasmAttribute();
-            //System.out.println(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
-            //System.out.println(DataUtil.objectToString(attributeNode.getProperty(ATTRIBUTE_NAME)));
 
             attribute.setId(DataUtil.objectToString(attributeNode.getProperty(NAME_KEY)));
             if (attributeNode.hasProperty(ATTRIBUTE_URI))
@@ -424,56 +392,84 @@ public enum NodeReader {
         return badNote;
     }
 
+    private List<BiomarkerSummary> getBiomarkers(final GraphDatabaseService graphDb,
+                                                 final Log log,
+                                                 final String patientId) {
+        final List<BiomarkerSummary> biomarkers = new ArrayList<>();
 
-//    private List<NewPatientDiagnosis> getDiagnosis(final GraphDatabaseService graphDb,
-//                                                   final Log log,
-//                                                   final List<String> patientIds) {
-//
-//        final List<NewPatientDiagnosis> patientDiagnosis = new ArrayList<>();
-//        final Map<String, String> diagnosisGroupNames = UriConstants.getDiagnosisGroupNames(graphDb);
-//
-//        try (Transaction tx = graphDb.beginTx()) {
-//            for (String patientId : patientIds) {
-//
-//                final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
-//
-//                if (patientNode == null) {
-//                    continue;
-//                }
-//                final List<String> diagnoses = new ArrayList<>();
-//                final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes(graphDb, patientNode,
-//                        SUBJECT_HAS_CANCER_RELATION);
-//                for (Node cancerNode : cancerNodes) {
-//                    diagnoses.add(DataUtil.getPreferredText(graphDb, cancerNode));
-//                }
-//                Collections.sort(diagnoses);
-//
-//                final Map<String, Object> map = new HashMap<>();
-//                map.put("patientId", patientId);
-//                map.put("diagnosis", diagnoses);
-//                final Collection<String> diagnosisGroups
-//                        = diagnoses.stream()
-//                        .map(d -> diagnosisGroupNames.getOrDefault(d, "Unknown"))
-//                        .distinct()
-//                        .sorted()
-//                        .collect(Collectors.toList());
-//
-//                map.put("diagnosisGroups", diagnosisGroups);
-//                // Add to the list
-//                NewPatientDiagnosis patientdx = new NewPatientDiagnosis();
-//                patientdx.setDiagnosis(diagnoses);
-//                patientdx.setDiagnosisGroups(new ArrayList<>(diagnosisGroups));
-//                patientdx.setPatientId(patientId);
-//                patientDiagnosis.add(patientdx);
-//
-//
-//            }
-//            tx.success();
-//        }
-//
-//        return patientDiagnosis;
-//
-//    }
+        try (Transaction tx = graphDb.beginTx()) {
+
+            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+
+            final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes(graphDb, patientNode,
+                    SUBJECT_HAS_CANCER_RELATION);
+            for (Node cancerNode : cancerNodes) {
+//                    final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes(graphDb, cancerNode,
+//                            CANCER_HAS_TUMOR_RELATION);
+                for (String biomarker : BIOMARKERS) {
+                    String markerValues = SearchUtil.getAttributeByNameAsString(graphDb, log, cancerNode, biomarker);
+                    if (markerValues != null) {
+                        String[] values = markerValues.split(";");
+                        for (String value : values) {
+                            BiomarkerSummary biomarkerSummary = new BiomarkerSummary();
+                            biomarkerSummary.setPatientId(patientId);
+                            biomarkerSummary.setTumorFactRelation(biomarker);
+                            biomarkerSummary.setValueText(value);
+                            //debug here, need to do this once for positive once for negative
+                            biomarkerSummary.setRelationPrettyName(DataUtil.getRelationPrettyName(biomarkerSummary.getTumorFactRelation()));
+                            biomarkers.add(biomarkerSummary);
+                        }
+                    }
+                }
+            }
+
+            tx.success();
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Failed to call getBiomarkers() " + e.getMessage());
+        }
+
+        return biomarkers;
+    }
+
+
+    private PatientDiagnosis getDiagnosis(final GraphDatabaseService graphDb,
+                                             final Log log,
+                                             final String patientId) {
+
+        final PatientDiagnosis patientDiagnosis = new PatientDiagnosis();
+        final Map<String, String> diagnosisGroupNames = UriConstants.getDiagnosisGroupNames(graphDb);
+
+        try (Transaction tx = graphDb.beginTx()) {
+            final Node patientNode = SearchUtil.getLabeledNode(graphDb, PATIENT_LABEL, patientId);
+            final List<String> diagnoses = new ArrayList<>();
+            final Collection<Node> cancerNodes = SearchUtil.getOutRelatedNodes(graphDb, patientNode,
+                    SUBJECT_HAS_CANCER_RELATION);
+            for (Node cancerNode : cancerNodes) {
+                diagnoses.add(DataUtil.getPreferredText(graphDb, cancerNode));
+            }
+            Collections.sort(diagnoses);
+
+//            final Map<String, Object> map = new HashMap<>();
+//            map.put("patientId", patientId);
+//            map.put("diagnosis", diagnoses);
+            final Collection<String> diagnosisGroups
+                    = diagnoses.stream()
+                    .map(d -> diagnosisGroupNames.getOrDefault(d, "Unknown"))
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            //map.put("diagnosisGroups", diagnosisGroups);
+            // Add to the list
+
+            patientDiagnosis.setDiagnosis(diagnoses);
+            patientDiagnosis.setDiagnosisGroups(new ArrayList<>(diagnosisGroups));
+            patientDiagnosis.setPatientId(patientId);
+
+            tx.success();
+        }
+        return patientDiagnosis;
+    }
 
     private List<Note> getNotes(final GraphDatabaseService graphDb,
                                 final Log log,
@@ -717,32 +713,19 @@ public enum NodeReader {
     /////////////////////////////////////////////////////////////////////////////////////////
 
     static private PatientInfo createPatientInfo(final Node patientNode) throws RuntimeException, ParseException {
-        PatientInfo patientInfo = new PatientInfo();
-
         String patientId = DataUtil.objectToString(patientNode.getProperty(NAME_KEY));
         if (patientId == null) {
             //unrecoverable error?
             throw new RuntimeException("Node supplied to createSharedPatientProperties does not contain required property: " + NAME_KEY);
         }
+        StructuredPatientData structuredPatientData = getStructuredPatientDataForPatientId(patientId);
 
-        NewStructuredPatientData structuredPatientData = getStructuredPatientDataForPatientId(patientId);
-        patientInfo = populateNewRandomPatient(structuredPatientData, patientInfo);
-        //String nameValue = safeGetProperty(patientNode, PATIENT_NAME, PATIENT_NAME + "_property_not_found");
-        // String genderValue = safeGetProperty(patientNode, PATIENT_GENDER, PATIENT_GENDER + "_property_not_found");
-        //String birthValue = safeGetProperty(patientNode, PATIENT_BIRTH_DATE, PATIENT_BIRTH_DATE + "_property_not_found");
-        //String deathValue = safeGetProperty(patientNode, PATIENT_DEATH_DATE, PATIENT_DEATH_DATE + "_property_not_found");
-
-        //patientInfo.setPatientId(patientId);
-        //patientInfo.setPatientName(nameValue);
-        //patientInfo.setGender(genderValue);
-        //patientInfo.setBirthDate(birthValue);
-
-        return patientInfo;
-
+        if (structuredPatientData != null) {
+            return populateNewRandomPatient(structuredPatientData);
+        } else return null;
     }
 
-    public static PatientInfo populateNewRandomPatient(NewStructuredPatientData structuredPatientData, PatientInfo
-            patientInfo) throws ParseException {
+    public static PatientInfo populateNewRandomPatient(StructuredPatientData structuredPatientData) throws ParseException {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         String fed = structuredPatientData.getFirstEncounterDate();
@@ -753,31 +736,30 @@ public enum NodeReader {
         Date ledDate = simpleDateFormat.parse(led);
         Date dobDate = simpleDateFormat.parse(dob);
 
-        Integer ageAtFirstEncounter = Math.round((fedDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
-        Integer ageAtLastEncounter = Math.round((ledDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
+        @SuppressWarnings("IntegerDivisionInFloatingPointContext") int ageAtFirstEncounter = Math.round((fedDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
+        @SuppressWarnings("IntegerDivisionInFloatingPointContext") int ageAtLastEncounter = Math.round((ledDate.getTime() - dobDate.getTime()) / StructuredPatientDataGenerator.MILLS_IN_A_YEAR);
 
-        PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
+        PatientInfo patientInfo = new PatientInfo();
         patientInfo.setPatientId(structuredPatientData.getPatientId());
         patientInfo.setPatientName(structuredPatientData.getFirstname() + " " + structuredPatientData.getLastname());
         patientInfo.setBirthDate(structuredPatientData.getBirthdate());
-        patientInfo.setFirstEncounterAge(ageAtFirstEncounter.toString());
-        patientInfo.setGetFirstEncounterDate(structuredPatientData.getFirstEncounterDate());
-        patientInfo.setLastEncounterAge(ageAtLastEncounter.toString());
+        patientInfo.setFirstEncounterAge(Integer.toString(ageAtFirstEncounter));
+        patientInfo.setFirstEncounterDate(structuredPatientData.getFirstEncounterDate());
+        patientInfo.setLastEncounterAge(Integer.toString(ageAtLastEncounter));
         patientInfo.setLastEncounterDate(structuredPatientData.getLastEncounterDate());
         patientInfo.setGender(structuredPatientData.getGender());
-        //patientSummaryAndStages.getStages().add("Stage IA");
         return patientInfo;
 
 
     }
 
-    public static NewStructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
+    public static StructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
         Gson gson = new Gson();
         try {
             JsonReader reader = new JsonReader(new FileReader("/Users/johnlevander/dev/dphe-neo4j-plugin/fake_patient_structured_data.json"));
-            List<NewStructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<NewStructuredPatientData>>() {
+            List<StructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<StructuredPatientData>>() {
             }.getType());
-            for (NewStructuredPatientData structuredPatientData : data) {
+            for (StructuredPatientData structuredPatientData : data) {
                 if (structuredPatientData.getPatientId().equals(actualPatientId)) {
                     return structuredPatientData;
                 }
@@ -792,16 +774,9 @@ public enum NodeReader {
     //TODO: throwing generic exception, make it more specific
     static private PatientInfoAndStages createSharedPatientProperties(final Node patientNode) throws
             ParseException {
-        //hacky but okay for now
-
-        PatientInfoAndStages patientSummaryAndStages = new PatientInfoAndStages();
         String actualPatientId = DataUtil.objectToString(patientNode.getProperty(NAME_KEY));
-        //patientSummaryAndStages.setPatientId(); how?
-
-        populateNewRandomPatient(getStructuredPatientDataForPatientId(actualPatientId), patientSummaryAndStages);
-        //patientSummaryAndStages.getStages().add("Stage IA");
-
-        return patientSummaryAndStages;
+        PatientInfo patientInfo = populateNewRandomPatient(Objects.requireNonNull(getStructuredPatientDataForPatientId(actualPatientId)));
+        return new PatientInfoAndStages(patientInfo);
     }
 
     public PatientSummaryAndStagesList patientSummaryAndStagesList(GraphDatabaseService graphDb, Log log,
@@ -812,8 +787,6 @@ public enum NodeReader {
             final Collection<Node> patientNodes = DataUtil.getAllPatientNodes(graphDb);
             for (Node patientNode : patientNodes) {
                 PatientInfoAndStages patientSummaryAndStages = createSharedPatientProperties(patientNode);
-
-
                 if (includeStages) {
                     // get the major stage values for the patient
                     final Set<String> stages = new HashSet<>();
@@ -861,21 +834,19 @@ public enum NodeReader {
 
     private static String convertToLogSyntax(NeoplasmAttribute neoplasmAttribute) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("id: " + neoplasmAttribute.getId() + "\n");
-        stringBuilder.append(" |--classUri : " + neoplasmAttribute.getClassUri() + "\n");
-        stringBuilder.append(" |--name: " + neoplasmAttribute.getName() + "\n");
-        stringBuilder.append(" |--value: " + neoplasmAttribute.getValue() + "\n");
-        stringBuilder.append(" |--confidence: " + neoplasmAttribute.getConfidence() + "\n");
+        stringBuilder.append("id: ").append(neoplasmAttribute.getId()).append("\n");
+        stringBuilder.append(" |--classUri : ").append(neoplasmAttribute.getClassUri()).append("\n");
+        stringBuilder.append(" |--name: ").append(neoplasmAttribute.getName()).append("\n");
+        stringBuilder.append(" |--value: ").append(neoplasmAttribute.getValue()).append("\n");
+        stringBuilder.append(" |--confidence: ").append(neoplasmAttribute.getConfidence()).append("\n");
         if (neoplasmAttribute.getConfidenceFeatures() != null)
-            stringBuilder.append(" +--confidenceFeatures size: " + neoplasmAttribute.getConfidenceFeatures().size() + "\n");
-        ;
-
+            stringBuilder.append(" +--confidenceFeatures size: ").append(neoplasmAttribute.getConfidenceFeatures().size()).append("\n");
         if (neoplasmAttribute.getIndirectEvidence() != null)
-            stringBuilder.append(" +--indirectEvidence size: " + neoplasmAttribute.getIndirectEvidence().size() + "\n");
+            stringBuilder.append(" +--indirectEvidence size: ").append(neoplasmAttribute.getIndirectEvidence().size()).append("\n");
         if (neoplasmAttribute.getDirectEvidence() != null)
-            stringBuilder.append(" +--directEvidence size: " + neoplasmAttribute.getDirectEvidence().size() + "\n");
+            stringBuilder.append(" +--directEvidence size: ").append(neoplasmAttribute.getDirectEvidence().size()).append("\n");
         if (neoplasmAttribute.getNotEvidence() != null)
-            stringBuilder.append(" +--notEvidence size: " + neoplasmAttribute.getNotEvidence().size() + "\n");
+            stringBuilder.append(" +--notEvidence size: ").append(neoplasmAttribute.getNotEvidence().size()).append("\n");
 
         return stringBuilder.toString();
     }
@@ -888,55 +859,55 @@ public enum NodeReader {
     }
 
     //should be using getAttributes()
-    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String
+    public CancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String
             patientId) {
 
-        NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
-        List<NewCancerSummary> cancers = new ArrayList<>();
-        newCancerAndTumorSummary.setCancers(cancers);
+        CancerAndTumorSummary cancerAndTumorSummary = new CancerAndTumorSummary();
+        List<CancerSummary> cancers = new ArrayList<>();
+        cancerAndTumorSummary.setCancers(cancers);
 
 
-        String ptid = patientId;
+
         List<NeoplasmSummary> neoplasmSummaries = getCancers(graphDb, log, patientId);
 
-        for (NeoplasmSummary cancer : neoplasmSummaries) {
+        for (NeoplasmSummary cancer : Objects.requireNonNull(neoplasmSummaries)) {
             // Cancer summary
             //final Map<String, Object> cancer = new HashMap<>();
-            final NewCancerSummary newCancerSummary = new NewCancerSummary();
+            final CancerSummary CancerSummary = new CancerSummary();
 
             final String summaryName = cancer.getId();
             // final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
-            newCancerSummary.setCancerId(summaryName);
+            CancerSummary.setCancerId(summaryName);
 
-            List<NewTumorSummary> tumors = new ArrayList<>();
-            newCancerSummary.setTumors(tumors);
+            List<TumorSummary> tumors = new ArrayList<>();
+            CancerSummary.setTumors(tumors);
 
-            List<NewCancerFact> cancerFacts = new ArrayList<>();
-            newCancerSummary.setCancerFacts(cancerFacts);
+            List<CancerFact> cancerFacts = new ArrayList<>();
+            CancerSummary.setCancerFacts(cancerFacts);
 
             for (NeoplasmAttribute neoplasmAttribute : cancer.getAttributes()) {
                 //logAttribute("\ncancer attribute:\n", neoplasmAttribute, log);
-                NewCancerFact newCancerFact = new NewCancerFact();
-                newCancerFact.setRelation(neoplasmAttribute.getName());
-                newCancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName(newCancerFact.getRelation()));
+                CancerFact cancerFact = new CancerFact();
+                cancerFact.setRelation(neoplasmAttribute.getName());
+                cancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName(cancerFact.getRelation()));
 
-                NewFactInfo newCancerFactInfo = new NewFactInfo();
+                FactInfo newCancerFactInfo = new FactInfo();
                 newCancerFactInfo.setId(neoplasmAttribute.getId());
                 newCancerFactInfo.setName(neoplasmAttribute.getClassUri());
 
                 //some of these ^^^ are null?
                 newCancerFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newCancerFactInfo.getName()));
-                newCancerFact.setCancerFactInfo(newCancerFactInfo);
-                cancerFacts.add(newCancerFact);
+                cancerFact.setCancerFactInfo(newCancerFactInfo);
+                cancerFacts.add(cancerFact);
 
             }
 
             for (NeoplasmSummary tumor : cancer.getSubSummaries()) {
-                NewTumorSummary newTumorSummary = new NewTumorSummary();
+                TumorSummary tumorSummary = new TumorSummary();
 
-                newTumorSummary.setTumorId(tumor.getId());
+                tumorSummary.setTumorId(tumor.getId());
 
-                List<NewTumorFact> newTumorFacts = new ArrayList<>();
+                List<TumorFact> tumorFacts = new ArrayList<>();
 
                 String behavior = "Generic";
                 for (NeoplasmAttribute tumorAttribute : tumor.getAttributes()) {
@@ -944,30 +915,30 @@ public enum NodeReader {
                         behavior = tumorAttribute.getClassUri();
 
                     //logAttribute("\ntumor:\n", tumorAttribute, log);
-                    NewTumorFact newTumorFact = new NewTumorFact();
+                    TumorFact tumorFact = new TumorFact();
 
-                    NewFactInfo newTumorFactInfo = new NewFactInfo();
+                    FactInfo newTumorFactInfo = new FactInfo();
                     newTumorFactInfo.setId(tumorAttribute.getId());
                     newTumorFactInfo.setName(tumorAttribute.getClassUri());
                     newTumorFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newTumorFactInfo.getName()));
-                    newTumorFact.setTumorFactInfo(newTumorFactInfo);
-                    newTumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName(tumorAttribute.getName()));
-                    newTumorFact.setRelation(tumorAttribute.getName());
-                    newTumorFacts.add(newTumorFact);
+                    tumorFact.setTumorFactInfo(newTumorFactInfo);
+                    tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName(tumorAttribute.getName()));
+                    tumorFact.setRelation(tumorAttribute.getName());
+                    tumorFacts.add(tumorFact);
                 }
-                newTumorSummary.setHasTumorType(behavior);
-                newTumorSummary.setTumorFacts(newTumorFacts);
-                tumors.add(newTumorSummary);
+                tumorSummary.setHasTumorType(behavior);
+                tumorSummary.setTumorFacts(tumorFacts);
+                tumors.add(tumorSummary);
             }
 
-            cancers.add(newCancerSummary);
+            cancers.add(CancerSummary);
         }
-        return newCancerAndTumorSummary;
+        return cancerAndTumorSummary;
     }
 
-//    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
-//        NewCancerAndTumorSummary newCancerAndTumorSummary = new NewCancerAndTumorSummary();
-//        List<NewCancerSummary> cancers = new ArrayList<>();
+//    public CancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+//        CancerAndTumorSummary newCancerAndTumorSummary = new CancerAndTumorSummary();
+//        List<CancerSummary> cancers = new ArrayList<>();
 //        newCancerAndTumorSummary.setCancers(cancers);
 //        //final List<Map<String, Object>> cancers = new ArrayList<>();
 //        try ( Transaction tx = graphDb.beginTx() ) {
@@ -981,15 +952,15 @@ public enum NodeReader {
 //            for ( Node cancerNode : cancerNodes ) {
 //                // Cancer summary
 //                //final Map<String, Object> cancer = new HashMap<>();
-//                NewCancerSummary newCancerSummary = new NewCancerSummary();
+//                CancerSummary CancerSummary = new CancerSummary();
 //                final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
-//                newCancerSummary.setCancerId(cancerId);
+//                CancerSummary.setCancerId(cancerId);
 //                // Add to cancer map
 //                //cancer.put( "cancerId", cancerId );
 //                //final List<Map> cancerFacts = new ArrayList<>();
-//                final List<NewCancerFact> cancerFacts = new ArrayList<>();
+//                final List<CancerFact> cancerFacts = new ArrayList<>();
 //                for ( Relationship relation : cancerNode.getRelationships( Direction.OUTGOING ) ) {
-//                    NewCancerFact newCancerFact = new NewCancerFact();
+//                    CancerFact newCancerFact = new CancerFact();
 //                    NewCancerFactInfo newCancerFactInfo = new NewCancerFactInfo();
 //                    // final Map<String, Object> cancerFact = new HashMap<>();
 //                    // final Map<String, Object> cancerFactInfo = new HashMap<>();
@@ -1038,10 +1009,10 @@ public enum NodeReader {
 //                    cancerFacts.add(newCancerFact);
 //                }
 //                // Add to cancer map
-//                newCancerSummary.setCancerFacts( cancerFacts );
+//                CancerSummary.setCancerFacts( cancerFacts );
 //                // Tumor summary
 //                //final List<Map<String, Object>> tumors = new ArrayList<>();
-//                final List<NewTumorSummary> tumors = new ArrayList<>();
+//                final List<TumorSummary> tumors = new ArrayList<>();
 //                final Collection<Node> tumorNodes = SearchUtil.getOutRelatedNodes( graphDb, cancerNode,
 //                        CANCER_HAS_TUMOR_RELATION );
 //                if (tumorNodes.size() == 0) {
@@ -1049,7 +1020,7 @@ public enum NodeReader {
 //                }
 //                for ( Node tumorNode : tumorNodes ) {
 //                    //final Map<String, Object> tumor = new HashMap<>();
-//                    NewTumorSummary newTumorSummary = new NewTumorSummary();
+//                    TumorSummary newTumorSummary = new TumorSummary();
 //                    final String tumorId = DataUtil.objectToString( tumorNode.getProperty( NAME_KEY ) );
 //                    // Add tumorId
 //                    // tumor.put( "tumorId", tumorId );
@@ -1058,7 +1029,7 @@ public enum NodeReader {
 //                    //tumor.put( HAS_TUMOR_TYPE, DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE ) ) );
 //                    newTumorSummary.setHasTumorType(DataUtil.objectToString( tumorNode.getProperty( HAS_TUMOR_TYPE )));
 //                    //final List<Map<String, Object>> tumorFacts = new ArrayList<>();
-//                    List<NewTumorFact> tumorFacts =  new ArrayList<>();
+//                    List<TumorFact> tumorFacts =  new ArrayList<>();
 //                    for ( Relationship relation : tumorNode.getRelationships( Direction.OUTGOING ) ) {
 //                        //final Map<String, Object> tumorFact = new HashMap<>();
 //                        //final Map<String, Object> tumorFactInfo = new HashMap<>();
@@ -1068,7 +1039,7 @@ public enum NodeReader {
 //                                || tumorFactRelationName.equals( FACT_HAS_TEXT_MENTION ) ) {
 //                            continue;
 //                        }
-//                        NewTumorFact tumorFact = new NewTumorFact();
+//                        TumorFact tumorFact = new TumorFact();
 //                        //tumorFact.put( "relation", tumorFactRelationName );
 //                        tumorFact.setRelation(tumorFactRelationName);
 //
@@ -1100,10 +1071,10 @@ public enum NodeReader {
 //                }
 //                // Add to cancer map
 //                //cancer.put( "tumors", tumors );
-//                newCancerSummary.setTumors(tumors);
+//                CancerSummary.setTumors(tumors);
 //                // Finally add to the cancers list
 //                //cancers.add( cancer );
-//                cancers.add(newCancerSummary);
+//                cancers.add(CancerSummary);
 //            }
 //            tx.success();
 //        } catch ( RuntimeException e ) {
@@ -1113,29 +1084,29 @@ public enum NodeReader {
 //        return newCancerAndTumorSummary;
 //    }
 
-    public List<NewPatientSummary> getPatientSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+    public List<PatientSummary> getPatientSummary(GraphDatabaseService graphDb, Log log, String patientId) {
         return DataUtil.getAllPatientNodes(graphDb)
                 .stream()
-                .map(n -> createNewPatientSummary(graphDb, n))
+                .map(n -> createPatientSummary(graphDb, n))
                 .filter(n -> n.getPatientInfo().getPatientId().equals(patientId))
                 .collect(Collectors.toList());
     }
 
-    public List<NewPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
+    public List<PatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
 
         return DataUtil.getAllPatientNodes(graphDb)
                 .stream()
-                .map(n -> createNewPatientSummary(graphDb, n))
-                .filter(Objects::nonNull)
+                .map(n -> createPatientSummary(graphDb, n))
+                //.filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
 
-//        List<NewPatientSummary> patientSummaries = new ArrayList<>();
+//        List<PatientSummary> patientSummaries = new ArrayList<>();
 //        try ( Transaction tx = graphDb.beginTx() ) {
 //            // DataUtil.getAllPatientNodes() is supposed to return all unique patients
 //            final Collection<Node> patientNodes = DataUtil.getAllPatientNodes( graphDb );
 //            for ( Node patientNode : patientNodes ) {
-//                patientSummaries.add(createNewPatientSummary(graphDb, patientNode));
+//                patientSummaries.add(createPatientSummary(graphDb, patientNode));
 //            }
 //            tx.success();
 //        } catch ( RuntimeException e ) {
@@ -1145,13 +1116,13 @@ public enum NodeReader {
     }
 
 
-    private NewPatientSummary createNewPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
+    private PatientSummary createPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
 
         final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
-        final List<NewReport> reportList = new ArrayList<>();
+        final List<Report> reportList = new ArrayList<>();
         // For each note, add a patient object
         for (Node note : notes) {
-            NewReport report = new NewReport();
+            Report report = new Report();
 
             // Report ID
             //report.setId(DataUtil.objectToString(note.getProperty(NAME_KEY)));
@@ -1167,14 +1138,14 @@ public enum NodeReader {
             // Add to the reportList
             reportList.add(report);
         }
-        NewPatientSummary newPatientSummary = new NewPatientSummary();
+        PatientSummary PatientSummary = new PatientSummary();
         try {
-            newPatientSummary.setPatientInfo(createPatientInfo(patientNode));
+            PatientSummary.setPatientInfo(createPatientInfo(patientNode));
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        newPatientSummary.setReportData(reportList);
-        return newPatientSummary;
+        PatientSummary.setReportData(reportList);
+        return PatientSummary;
 
     }
 
@@ -1271,21 +1242,21 @@ public enum NodeReader {
         FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances = new FactInfoAndGroupedTextProvenances();
         List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
 
-        List<NewMentionedTerm> mentionedTerms = new ArrayList<NewMentionedTerm>();
-        for (NeoplasmSummary cancer : cancers) {
+        List<MentionedTerm> mentionedTerms = new ArrayList<>();
+        for (NeoplasmSummary cancer : Objects.requireNonNull(cancers)) {
             List<NeoplasmSummary> tumors = cancer.getSubSummaries();
             for (NeoplasmSummary tumorSummary : tumors) {
                 List<NeoplasmAttribute> tumorFacts = tumorSummary.getAttributes();
                 for (NeoplasmAttribute fact : tumorFacts) {
                     if (fact.getId().equalsIgnoreCase(factId)) {  //this currently never matches...
                         //use direct evidence to build the "mention" datastructure
-                        NewFactInfo newFactInfo = new NewFactInfo();
-                        newFactInfo.setName(fact.getName());
-                        newFactInfo.setId(fact.getId());
-                        newFactInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
-                        factInfoAndGroupedTextProvenances.setSourceFact(newFactInfo);
+                        FactInfo factInfo = new FactInfo();
+                        factInfo.setName(fact.getName());
+                        factInfo.setId(fact.getId());
+                        factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
+                        factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
                         for (Mention mention : fact.getDirectEvidence()) {
-                            NewMentionedTerm mentionedTerm = new NewMentionedTerm();
+                            MentionedTerm mentionedTerm = new MentionedTerm();
                             mentionedTerm.setTerm(mention.getClassUri());
                             mentionedTerm.setReportId(mention.getNoteId());
                             mentionedTerm.setReportType(mention.getNoteType());

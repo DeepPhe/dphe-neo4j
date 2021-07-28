@@ -3,7 +3,7 @@ package org.healthnlp.deepphe.neo4j.node;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class NewStructuredPatientData {
+public class StructuredPatientData {
     String patientId;
 
     public String getPatientId() {
