@@ -1084,7 +1084,7 @@ public enum NodeReader {
 //        return newCancerAndTumorSummary;
 //    }
 
-    public List<PatientSummary> getPatientSummary(GraphDatabaseService graphDb, Log log, String patientId) {
+    public List<GuiPatientSummary> getPatientSummary(GraphDatabaseService graphDb, Log log, String patientId) {
         return DataUtil.getAllPatientNodes(graphDb)
                 .stream()
                 .map(n -> createPatientSummary(graphDb, n))
@@ -1092,7 +1092,7 @@ public enum NodeReader {
                 .collect(Collectors.toList());
     }
 
-    public List<PatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
+    public List<GuiPatientSummary> getPatientSummaries(GraphDatabaseService graphDb, Log log) {
 
         return DataUtil.getAllPatientNodes(graphDb)
                 .stream()
@@ -1116,7 +1116,7 @@ public enum NodeReader {
     }
 
 
-    private PatientSummary createPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
+    private GuiPatientSummary createPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
 
         final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
         final List<Report> reportList = new ArrayList<>();
@@ -1138,14 +1138,14 @@ public enum NodeReader {
             // Add to the reportList
             reportList.add(report);
         }
-        PatientSummary PatientSummary = new PatientSummary();
+        GuiPatientSummary patientSummary = new GuiPatientSummary();
         try {
-            PatientSummary.setPatientInfo(createPatientInfo(patientNode));
+            patientSummary.setPatientInfo(createPatientInfo(patientNode));
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        PatientSummary.setReportData(reportList);
-        return PatientSummary;
+        patientSummary.setReportData(reportList);
+        return patientSummary;
 
     }
 

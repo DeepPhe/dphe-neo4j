@@ -161,6 +161,7 @@ public enum NodeWriter {
       try ( Transaction tx = graphDb.beginTx() ) {
          final Node patientNode = createPatientNode( graphDb, log, patient.getId() );
          if ( patientNode == null ) {
+            log.error("Can't create patient node?");
             return;
          }
 //         node.setProperty( adjustPropertyName( PATIENT_NAME ), patient.getName() );

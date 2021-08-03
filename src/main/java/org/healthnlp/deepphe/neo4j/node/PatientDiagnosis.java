@@ -11,6 +11,7 @@ public class PatientDiagnosis {
    List<String> diagnosisGroups;
    List<String> diagnosis;
    String patientId;
+   private String classUri;
 
    public List<String> getDiagnosisGroups() {
       return diagnosisGroups;
@@ -36,4 +37,11 @@ public class PatientDiagnosis {
       this.patientId = patientId;
    }
 
+   public void setClassUri(String classUri) {
+      this.classUri = classUri;
+   }
+
+   public String getClassUri() {
+      return classUri;
+   }
 }
