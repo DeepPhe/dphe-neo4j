@@ -413,6 +413,24 @@ final public class UriConstants {
 
             NEOPLASM_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
 
+            // v5
+            final Collection<String> NAMED_TUMOR_URIS
+                  = NEOPLASM_URIS.stream()
+                                 .filter( u -> u.contains( "Tumor" ) || u.contains( "Mass" ) )
+                                 .collect( Collectors.toSet() );
+            final Collection<String> NAMED_CARCINOMA_URIS
+                  = MASS_URIS.stream()
+                             .filter( u -> !u.contains( "Tumor" ) && !u.contains( "Mass" ) )
+                             .filter( u -> u.toLowerCase().contains( "carcinoma" )
+                                           || u.contains( "Cancer" ) )
+                             .collect( Collectors.toSet() );
+
+            MASS_URIS.addAll( NAMED_TUMOR_URIS );
+            NEOPLASM_URIS.removeAll( NAMED_TUMOR_URIS );
+
+            MASS_URIS.removeAll( NAMED_CARCINOMA_URIS );
+            NEOPLASM_URIS.addAll( NAMED_CARCINOMA_URIS );
+
             MASS_NEOPLASMS.addAll( MASS_URIS );
             MASS_NEOPLASMS.addAll( NEOPLASM_URIS );
 
@@ -423,7 +441,7 @@ final public class UriConstants {
             PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Primary_Lesion" ) );
 
             METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTATIC_NEOPLASM ) );
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Secondary_Lesion" ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Metastatic_Lesion" ) );
             METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Secondary_Lesion" ) );
@@ -530,7 +548,10 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
 
             POSITIVE_VALUE_URIS.add( "Positive" );
             POSITIVE_VALUE_URIS.add( "Negative" );
