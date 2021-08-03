@@ -186,7 +186,11 @@ public enum NodeWriter {
                                     final Log log,
                                     final String patientId ) {
       try ( Transaction tx = graphDb.beginTx() ) {
-         final Node allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         Node allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         if ( allPatientsNode == null ) {
+            initializeDphe( graphDb, log );
+            allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         }
          if ( allPatientsNode == null ) {
             log.error(
                   "No class node for uri " + PATIENT_URI + ".  Cannot create put patient " + patientId + " in graph." );
