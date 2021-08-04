@@ -595,6 +595,40 @@ final public class SearchUtil {
       return Collections.emptyList();
    }
 
+   static public Collection<Relationship> getAllOutRelationships( final GraphDatabaseService graphDb,
+                                                         final Node node ) {
+      if ( node == null ) {
+         return Collections.emptyList();
+      }
+      try ( Transaction tx = graphDb.beginTx() ) {
+         final Collection<Relationship> relationships = new HashSet<>();
+         for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
+            relationships.add( relation );
+         }
+         tx.success();
+         return relationships;
+      } catch ( MultipleFoundException mfE ) {
+         LOGGER.error( mfE.getMessage(), mfE );
+      }
+      return Collections.emptyList();
+   }
+
+   static public Collection<Relationship> getBranchAllOutRelationships( final GraphDatabaseService graphDb,
+                                                                        final Node node ) {
+      final Collection<Relationship> relationships = getAllOutRelationships( graphDb, node );
+      final Collection<Relationship> branchRelationships = new HashSet<>( relationships );
+      for ( Relationship relationship : relationships ) {
+         if ( relationship.isType( INSTANCE_OF_RELATION ) ) {
+            relationships.add( relationship );
+            continue;
+         }
+         for ( Node relationNode : relationship.getNodes() ) {
+            branchRelationships.addAll( getBranchAllOutRelationships( graphDb, relationNode ) );
+         }
+      }
+      return branchRelationships;
+   }
+
    static public boolean hasOutRelation( final GraphDatabaseService graphDb,
                                          final Node node,
                                          final RelationshipType relationType ) {
