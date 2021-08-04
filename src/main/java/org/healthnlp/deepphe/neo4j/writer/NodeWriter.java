@@ -6,9 +6,7 @@ import org.healthnlp.deepphe.neo4j.util.SearchUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
 
@@ -442,15 +440,16 @@ public enum NodeWriter {
             return;
          }
          Node node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
-         if ( node == null ) {
+         if ( node != null ) {
+            // clear everything below the note so that we can rewrite it.
+            clearNode( graphDb, log, node );
+         } else {
             node = graphDb.createNode( TEXT_DOCUMENT_LABEL );
             node.setProperty( NAME_KEY, note.getId() );
+            setInstanceOf( graphDb, log, node, allDocumentsNode );
+            createRelation( graphDb, log, patientNode, node, SUBJECT_HAS_NOTE_RELATION );
          }
          final Node noteNode = node;
-
-         setInstanceOf( graphDb, log, noteNode, allDocumentsNode );
-         createRelation( graphDb, log, patientNode, noteNode, SUBJECT_HAS_NOTE_RELATION );
-
          // Writes note date / time in format yyyyMMddhhmm
          noteNode.setProperty( NOTE_TYPE, note.getType() );
          noteNode.setProperty( NOTE_DATE, note.getDate() );
@@ -473,6 +472,30 @@ public enum NodeWriter {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
          log.error( "Ignoring Exception " + e.getMessage() );
          // Attempt to continue.
+      }
+   }
+
+   private void clearNode( final GraphDatabaseService graphDb,
+                           final Log log, final Node node ) {
+      if ( node == null ) {
+         return;
+      }
+      final Collection<Relationship> noteRelationships = SearchUtil.getBranchAllOutRelationships( graphDb, node );
+      try ( Transaction tx = graphDb.beginTx() ) {
+         for ( Relationship relationship : noteRelationships ) {
+            final Node startNode = relationship.getStartNode();
+            final Node endNode = relationship.getEndNode();
+            relationship.delete();
+            if ( !startNode.equals( node ) ) {
+               startNode.delete();
+            }
+            if ( !relationship.isType( INSTANCE_OF_RELATION ) ) {
+               endNode.delete();
+            }
+         }
+         tx.success();
+      } catch ( MultipleFoundException mfE ) {
+         log.error( mfE.getMessage(), mfE );
       }
    }
 
