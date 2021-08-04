@@ -126,11 +126,14 @@ public enum NodeReader {
         final List<Note> notes = getNotes(graphDb, log, patientNode);
         patient.setNotes(notes);
 
-        final PatientDiagnosis diagnosis = getDiagnosis(graphDb, log, patientId);
-        patient.setDiagnoses(diagnosis);
+        final NewPatientDiagnosis diagnosis = getDiagnosis(graphDb, log, patientId);
+        List<NewPatientDiagnosis> newPatientDiagnoses = new ArrayList<>();
+        newPatientDiagnoses.add(diagnosis);
+        patient.setDiagnoses(newPatientDiagnoses);
 
         final List<BiomarkerSummary> biomarkers = getBiomarkers(graphDb, log, patientId);
-        patient.setBiomarkers(biomarkers);
+        //jdl
+        //patient.setBiomarkers(biomarkers);
 
         return patient;
     }
@@ -432,11 +435,11 @@ public enum NodeReader {
     }
 
 
-    private PatientDiagnosis getDiagnosis(final GraphDatabaseService graphDb,
+    private NewPatientDiagnosis getDiagnosis(final GraphDatabaseService graphDb,
                                              final Log log,
                                              final String patientId) {
 
-        final PatientDiagnosis patientDiagnosis = new PatientDiagnosis();
+        final NewPatientDiagnosis patientDiagnosis = new NewPatientDiagnosis();
         final Map<String, String> diagnosisGroupNames = UriConstants.getDiagnosisGroupNames(graphDb);
 
         try (Transaction tx = graphDb.beginTx()) {
@@ -859,11 +862,11 @@ public enum NodeReader {
     }
 
     //should be using getAttributes()
-    public CancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String
+    public NewCancerAndTumorSummary getCancerAndTumorSummary(GraphDatabaseService graphDb, Log log, String
             patientId) {
 
-        CancerAndTumorSummary cancerAndTumorSummary = new CancerAndTumorSummary();
-        List<CancerSummary> cancers = new ArrayList<>();
+        NewCancerAndTumorSummary cancerAndTumorSummary = new NewCancerAndTumorSummary();
+        List<NewCancerSummary> cancers = new ArrayList<>();
         cancerAndTumorSummary.setCancers(cancers);
 
 
@@ -873,25 +876,25 @@ public enum NodeReader {
         for (NeoplasmSummary cancer : Objects.requireNonNull(neoplasmSummaries)) {
             // Cancer summary
             //final Map<String, Object> cancer = new HashMap<>();
-            final CancerSummary CancerSummary = new CancerSummary();
+            final NewCancerSummary cancerSummary = new NewCancerSummary();
 
             final String summaryName = cancer.getId();
             // final String cancerId = DataUtil.objectToString( cancerNode.getProperty( NAME_KEY ) );
-            CancerSummary.setCancerId(summaryName);
+            cancerSummary.setCancerId(summaryName);
 
-            List<TumorSummary> tumors = new ArrayList<>();
-            CancerSummary.setTumors(tumors);
+            List<NewTumorSummary> tumors = new ArrayList<>();
+            cancerSummary.setTumors(tumors);
 
-            List<CancerFact> cancerFacts = new ArrayList<>();
-            CancerSummary.setCancerFacts(cancerFacts);
+            List<NewCancerFact> cancerFacts = new ArrayList<>();
+            cancerSummary.setCancerFacts(cancerFacts);
 
             for (NeoplasmAttribute neoplasmAttribute : cancer.getAttributes()) {
                 //logAttribute("\ncancer attribute:\n", neoplasmAttribute, log);
-                CancerFact cancerFact = new CancerFact();
+                NewCancerFact cancerFact = new NewCancerFact();
                 cancerFact.setRelation(neoplasmAttribute.getName());
                 cancerFact.setRelationPrettyName(DataUtil.getRelationPrettyName(cancerFact.getRelation()));
 
-                FactInfo newCancerFactInfo = new FactInfo();
+                NewFactInfo newCancerFactInfo = new NewFactInfo();
                 newCancerFactInfo.setId(neoplasmAttribute.getId());
                 newCancerFactInfo.setName(neoplasmAttribute.getClassUri());
 
@@ -903,11 +906,11 @@ public enum NodeReader {
             }
 
             for (NeoplasmSummary tumor : cancer.getSubSummaries()) {
-                TumorSummary tumorSummary = new TumorSummary();
+                NewTumorSummary tumorSummary = new NewTumorSummary();
 
                 tumorSummary.setTumorId(tumor.getId());
 
-                List<TumorFact> tumorFacts = new ArrayList<>();
+                List<NewTumorFact> tumorFacts = new ArrayList<>();
 
                 String behavior = "Generic";
                 for (NeoplasmAttribute tumorAttribute : tumor.getAttributes()) {
@@ -915,9 +918,9 @@ public enum NodeReader {
                         behavior = tumorAttribute.getClassUri();
 
                     //logAttribute("\ntumor:\n", tumorAttribute, log);
-                    TumorFact tumorFact = new TumorFact();
+                    NewTumorFact tumorFact = new NewTumorFact();
 
-                    FactInfo newTumorFactInfo = new FactInfo();
+                    NewFactInfo newTumorFactInfo = new NewFactInfo();
                     newTumorFactInfo.setId(tumorAttribute.getId());
                     newTumorFactInfo.setName(tumorAttribute.getClassUri());
                     newTumorFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newTumorFactInfo.getName()));
@@ -931,7 +934,7 @@ public enum NodeReader {
                 tumors.add(tumorSummary);
             }
 
-            cancers.add(CancerSummary);
+            cancers.add(cancerSummary);
         }
         return cancerAndTumorSummary;
     }
@@ -1119,10 +1122,10 @@ public enum NodeReader {
     private GuiPatientSummary createPatientSummary(GraphDatabaseService graphDb, Node patientNode) {
 
         final Collection<Node> notes = SearchUtil.getOutRelatedNodes(graphDb, patientNode, SUBJECT_HAS_NOTE_RELATION);
-        final List<Report> reportList = new ArrayList<>();
+        final List<NewReport> reportList = new ArrayList<>();
         // For each note, add a patient object
         for (Node note : notes) {
-            Report report = new Report();
+            NewReport report = new NewReport();
 
             // Report ID
             //report.setId(DataUtil.objectToString(note.getProperty(NAME_KEY)));
@@ -1242,7 +1245,7 @@ public enum NodeReader {
         FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances = new FactInfoAndGroupedTextProvenances();
         List<NeoplasmSummary> cancers = getCancers(graphDb, log, patientId);
 
-        List<MentionedTerm> mentionedTerms = new ArrayList<>();
+        List<NewMentionedTerm> mentionedTerms = new ArrayList<>();
         for (NeoplasmSummary cancer : Objects.requireNonNull(cancers)) {
             List<NeoplasmSummary> tumors = cancer.getSubSummaries();
             for (NeoplasmSummary tumorSummary : tumors) {
@@ -1250,13 +1253,13 @@ public enum NodeReader {
                 for (NeoplasmAttribute fact : tumorFacts) {
                     if (fact.getId().equalsIgnoreCase(factId)) {  //this currently never matches...
                         //use direct evidence to build the "mention" datastructure
-                        FactInfo factInfo = new FactInfo();
+                        NewFactInfo factInfo = new NewFactInfo();
                         factInfo.setName(fact.getName());
                         factInfo.setId(fact.getId());
                         factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
                         factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
                         for (Mention mention : fact.getDirectEvidence()) {
-                            MentionedTerm mentionedTerm = new MentionedTerm();
+                            NewMentionedTerm mentionedTerm = new NewMentionedTerm();
                             mentionedTerm.setTerm(mention.getClassUri());
                             mentionedTerm.setReportId(mention.getNoteId());
                             mentionedTerm.setReportType(mention.getNoteType());

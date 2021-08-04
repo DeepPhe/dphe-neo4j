@@ -1,6 +1,6 @@
 package org.healthnlp.deepphe.neo4j.node;
 
-public class BiomarkerSummary {
+public class NewBiomarkerSummary {
     String relationPrettyName;
     String tumorFactRelation;
     String patientId;

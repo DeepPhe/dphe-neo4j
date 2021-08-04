@@ -1,50 +1,37 @@
 package org.healthnlp.deepphe.neo4j.node;
 
 public class Report {
- String type;
- String id;
- String date;
- String episode;
+    String reportType, reportId, reportDate, reportEpisode;
 
- public String getReportName() {
-  return reportName;
- }
+    public String getReportType() {
+        return reportType;
+    }
 
- public void setReportName(String reportName) {
-  this.reportName = reportName;
- }
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
+    }
 
- String reportName;
+    public String getReportId() {
+        return reportId;
+    }
 
- public String getType() {
-  return type;
- }
+    public void setReportId(String reportId) {
+        this.reportId = reportId;
+    }
 
- public void setType(String type) {
-  this.type = type;
- }
+    public String getReportDate() {
+        return reportDate;
+    }
 
- public String getId() {
-  return id;
- }
+    public void setReportDate(String reportDate) {
+        this.reportDate = reportDate;
+    }
 
- public void setId(String id) {
-  this.id = id;
- }
+    public String getReportEpisode() {
+        return reportEpisode;
+    }
 
- public String getDate() {
-  return date;
- }
-
- public void setDate(String date) {
-  this.date = date;
- }
-
- public String getEpisode() {
-  return episode;
- }
-
- public void setEpisode(String episode) {
-  this.episode = episode;
- }
+    public void setReportEpisode(String reportEpisode) {
+        this.reportEpisode = reportEpisode;
+    }
 }

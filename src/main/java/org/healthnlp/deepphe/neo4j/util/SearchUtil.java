@@ -532,7 +532,9 @@ final public class SearchUtil {
          tx.success();
          return node;
       } catch ( MultipleFoundException mfE ) {
+
          LOGGER.error( mfE.getMessage(), mfE );
+        //where does this go?
       }
       return null;
    }

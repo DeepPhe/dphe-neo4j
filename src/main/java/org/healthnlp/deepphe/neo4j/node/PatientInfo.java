@@ -9,6 +9,20 @@ public class PatientInfo {
     private String lastEncounterDate;
     private String firstEncounterDate;
 
+    public PatientInfo() {
+
+    }
+    public PatientInfo(String patientId, String patientName, String birthDate, String lastEncounterAge, String firstEncounterAge, String lastEncounterDate, String firstEncounterDate, String gender) {
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.birthDate = birthDate;
+        this.lastEncounterAge = lastEncounterAge;
+        this.firstEncounterAge = firstEncounterAge;
+        this.lastEncounterDate = lastEncounterDate;
+        this.firstEncounterDate = firstEncounterDate;
+        this.gender = gender;
+    }
+
     public String getGender() {
         return gender;
     }

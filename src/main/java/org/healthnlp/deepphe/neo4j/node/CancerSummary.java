@@ -8,32 +8,13 @@ import java.util.List;
  */
 public class CancerSummary extends NeoplasmSummary {
 
-    String cancerId;
-    List<CancerFact> cancerFacts;
-    List<TumorSummary> tumors;
+    private List<NeoplasmSummary> tumors;
 
-
-    public String getCancerId() {
-        return cancerId;
-    }
-
-    public void setCancerId(String cancerId) {
-        this.cancerId = cancerId;
-    }
-
-    public List<CancerFact> getCancerFacts() {
-        return cancerFacts;
-    }
-
-    public void setCancerFacts(List<CancerFact> cancerFacts) {
-        this.cancerFacts = cancerFacts;
-    }
-
-    public List<TumorSummary> getTumors() {
+    public List<NeoplasmSummary> getTumors() {
         return tumors;
     }
 
-    public void setTumors(List<TumorSummary> tumors) {
+    public void setTumors( final List<NeoplasmSummary> tumors ) {
         this.tumors = tumors;
     }
 

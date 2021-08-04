@@ -402,6 +402,7 @@ public enum NodeWriter {
          if ( mentionId == null || mentionId.isEmpty() ) {
             continue;
          }
+         System.out.println("Writing mention: " + mentionId);
          final Node mentionNode = SearchUtil.getLabeledNode( graphDb, TEXT_MENTION_LABEL, mentionId );
          if ( mentionNode == null ) {
             continue;

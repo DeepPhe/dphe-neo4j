@@ -5,7 +5,7 @@ import java.util.List;
 public class GuiPatientSummary {
 
         PatientInfo patientInfo;
-        List<Report> reportData;
+        List<NewReport> reportData;
 
 
         public PatientInfo getPatientInfo() {
@@ -16,11 +16,11 @@ public class GuiPatientSummary {
             this.patientInfo = patientInfo;
         }
 
-        public List<Report> getReportData() {
+        public List<NewReport> getReportData() {
             return reportData;
         }
 
-        public void setReportData(List<Report> reportData) {
+        public void setReportData(List<NewReport> reportData) {
             this.reportData = reportData;
         }
 

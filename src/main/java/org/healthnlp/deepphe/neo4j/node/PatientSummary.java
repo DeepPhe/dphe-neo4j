@@ -9,10 +9,10 @@ import java.util.List;
  * @since 7/15/2020
  */
 public class PatientSummary {
+
    private String id;
    private Patient patient;
    private List<NeoplasmSummary> neoplasms;
-   private List<Fact> facts;
 
    public String getId() {
       return id;
@@ -38,13 +38,5 @@ public class PatientSummary {
       this.neoplasms = neoplasms;
    }
 
-   public List<Fact> getFacts() {
-      return facts;
-   }
-
-   public void setFacts( final List<Fact> facts ) {
-      this.facts = facts;
-   }
 
 }
-
