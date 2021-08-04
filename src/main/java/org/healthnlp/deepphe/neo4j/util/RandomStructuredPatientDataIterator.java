@@ -1,10 +1,11 @@
 package org.healthnlp.deepphe.neo4j.util;
 
-import org.healthnlp.deepphe.neo4j.node.StructuredPatientData;
+import org.healthnlp.deepphe.neo4j.node.NewStructuredPatientData;
+
 
 import java.util.Iterator;
 
-public class RandomStructuredPatientDataIterator implements Iterator<StructuredPatientData> {
+public class RandomStructuredPatientDataIterator implements Iterator<NewStructuredPatientData> {
 
     private final StructuredPatientDataGenerator structuredPatientDataGenerator;
 
@@ -20,7 +21,7 @@ public class RandomStructuredPatientDataIterator implements Iterator<StructuredP
     }
 
     @Override
-    public StructuredPatientData next() {
+    public NewStructuredPatientData next() {
         return structuredPatientDataGenerator.next();
     }
 }

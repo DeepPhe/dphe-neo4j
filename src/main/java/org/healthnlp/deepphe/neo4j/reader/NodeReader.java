@@ -132,7 +132,7 @@ public enum NodeReader {
         patient.setDiagnoses(newPatientDiagnoses);
 
         final List<BiomarkerSummary> biomarkers = getBiomarkers(graphDb, log, patientId);
-        //jdl
+        //
         //patient.setBiomarkers(biomarkers);
 
         return patient;
@@ -721,14 +721,14 @@ public enum NodeReader {
             //unrecoverable error?
             throw new RuntimeException("Node supplied to createSharedPatientProperties does not contain required property: " + NAME_KEY);
         }
-        StructuredPatientData structuredPatientData = getStructuredPatientDataForPatientId(patientId);
+        NewStructuredPatientData structuredPatientData = getStructuredPatientDataForPatientId(patientId);
 
         if (structuredPatientData != null) {
             return populateNewRandomPatient(structuredPatientData);
         } else return null;
     }
 
-    public static PatientInfo populateNewRandomPatient(StructuredPatientData structuredPatientData) throws ParseException {
+    public static PatientInfo populateNewRandomPatient(NewStructuredPatientData structuredPatientData) throws ParseException {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         String fed = structuredPatientData.getFirstEncounterDate();
@@ -756,13 +756,13 @@ public enum NodeReader {
 
     }
 
-    public static StructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
+    public static NewStructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
         Gson gson = new Gson();
         try {
             JsonReader reader = new JsonReader(new FileReader("/Users/johnlevander/dev/dphe-neo4j-plugin/fake_patient_structured_data.json"));
-            List<StructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<StructuredPatientData>>() {
+            List<NewStructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<NewStructuredPatientData>>() {
             }.getType());
-            for (StructuredPatientData structuredPatientData : data) {
+            for (NewStructuredPatientData structuredPatientData : data) {
                 if (structuredPatientData.getPatientId().equals(actualPatientId)) {
                     return structuredPatientData;
                 }

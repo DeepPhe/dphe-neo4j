@@ -3,7 +3,7 @@ package org.healthnlp.deepphe.neo4j.util;
 //for monday...i think the patient summary is generating the random patient ids, and then when the timeline goes to find that patient it's generating new patient ids and cant find a match
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.healthnlp.deepphe.neo4j.node.StructuredPatientData;
+import org.healthnlp.deepphe.neo4j.node.NewStructuredPatientData;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat;
 import java.time.YearMonth;
 import java.util.*;
 
-public class StructuredPatientDataGenerator implements Iterable<StructuredPatientData> {
+public class StructuredPatientDataGenerator implements Iterable<NewStructuredPatientData> {
     final Random firstNameRand,
             lastNameRand,
             firstEncounterDateRand,
@@ -112,8 +112,8 @@ public class StructuredPatientDataGenerator implements Iterable<StructuredPatien
         return "patient" + decimalFormat.format(patientId++);
     }
 
-    protected StructuredPatientData next() {
-        StructuredPatientData structuredPatientData = new StructuredPatientData();
+    protected NewStructuredPatientData next() {
+        NewStructuredPatientData structuredPatientData = new NewStructuredPatientData();
         long ageInMillisRightNow = getNextAgeInMillis();
         structuredPatientData.setBirthdate(getBirthDate(ageInMillisRightNow));
         structuredPatientData.setFirstname(getNextFirstName());
@@ -129,13 +129,13 @@ public class StructuredPatientDataGenerator implements Iterable<StructuredPatien
     public static void main(String[] args) {
         StructuredPatientDataGenerator structuredPatientDataGenerator = new StructuredPatientDataGenerator(0);
 
-        List<StructuredPatientData> structuredPatientData = new ArrayList<>();
+        List<NewStructuredPatientData> structuredPatientData = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
          structuredPatientData.add((structuredPatientDataGenerator.next()));
         }
 
         for (int i = 0; i <= 7; i++) {
-             StructuredPatientData patient = structuredPatientDataGenerator.next();
+             NewStructuredPatientData patient = structuredPatientDataGenerator.next();
              patient.setPatientId("fake_patient"+i);
             structuredPatientData.add(patient);
         }
@@ -153,7 +153,7 @@ public class StructuredPatientDataGenerator implements Iterable<StructuredPatien
 
 
     @Override
-    public Iterator<StructuredPatientData> iterator() {
+    public Iterator<NewStructuredPatientData> iterator() {
         return new RandomStructuredPatientDataIterator(this);
     }
 

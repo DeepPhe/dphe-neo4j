@@ -32,7 +32,12 @@ public enum NodeWriter {
    //                            COHORT INITIALIZATION
    //
    /////////////////////////////////////////////////////////////////////////////////////////
-
+//classes of users, that we want to target program officers, members
+// search (find me, find my mentee, find my department, find all of my X degrees of relationships)
+   //(only show names on zoom
+   //color code people by country
+   //
+   //show me NIH funded researhers
 
    public void initializeDphe( final GraphDatabaseService graphDb,
                                final Log log ) {
@@ -191,10 +196,11 @@ public enum NodeWriter {
          if ( allPatientsNode == null ) {
             initializeDphe( graphDb, log );
             allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+            //allPatientsNode is STILL null?  delete this once this works
          }
          if ( allPatientsNode == null ) {
             log.error(
-                  "No class node for uri " + PATIENT_URI + ".  Cannot create put patient " + patientId + " in graph." );
+                  "No class node for uri " + PATIENT_URI + ".  Cannot create patient " + patientId + " in graph." );
             tx.success();
             return null;
          }
