@@ -600,9 +600,8 @@ final public class SearchUtil {
             relationships.add( relationship );
             continue;
          }
-         for ( Node relationNode : relationship.getNodes() ) {
-            branchRelationships.addAll( getBranchAllOutRelationships( graphDb, relationNode ) );
-         }
+         final Node endNode = relationship.getEndNode();
+         branchRelationships.addAll( getBranchAllOutRelationships( graphDb, endNode ) );
       }
       return branchRelationships;
    }
