@@ -79,7 +79,7 @@ public enum NodeWriter {
                                                final Log log,
                                                final Node thingNode ) {
       if ( thingNode == null ) {
-         log.error( "No Thing node!  Cannot create put " + EMR_NOTE_URI + " in graph." );
+         log.error( "No Thing node!  Cannot put " + EMR_NOTE_URI + " in graph." );
          return;
       }
       final Node extantNode = SearchUtil.getClassNode( graphDb, EMR_NOTE_URI );
@@ -174,6 +174,7 @@ public enum NodeWriter {
          // TODO : Dynamic
 //         node.setProperty( adjustPropertyName( PATIENT_FIRST_ENCOUNTER ), patient.getFirstDateSlashText() );
 //         node.setProperty( adjustPropertyName( PATIENT_LAST_ENCOUNTER ), patient.getLastDateSlashText() );
+         System.out.println("adding note info for " + patient.getId());
          patient.getNotes().forEach( n -> addNoteInfo( graphDb, log, patientNode, n ) );
          tx.success();
       } catch ( TransactionFailureException txE ) {
@@ -439,6 +440,7 @@ public enum NodeWriter {
                               final Log log,
                               final Node patientNode, final Note note ) {
       try ( Transaction tx = graphDb.beginTx() ) {
+         System.out.println("Adding note " + note.getId());
          final Node allDocumentsNode = SearchUtil.getClassNode( graphDb, EMR_NOTE_URI );
          if ( allDocumentsNode == null ) {
             log.error( "No class for uri " + EMR_NOTE_URI + ".  Cannot create put note in graph." );
@@ -446,15 +448,15 @@ public enum NodeWriter {
             return;
          }
          Node node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
-         if ( node != null ) {
+       //  if ( node != null ) {
             // clear everything below the note so that we can rewrite it.
-            clearNode( graphDb, log, node );
-         } else {
+          //  clearNode( graphDb, log, node );
+        // } else {
             node = graphDb.createNode( TEXT_DOCUMENT_LABEL );
             node.setProperty( NAME_KEY, note.getId() );
             setInstanceOf( graphDb, log, node, allDocumentsNode );
             createRelation( graphDb, log, patientNode, node, SUBJECT_HAS_NOTE_RELATION );
-         }
+        // }
          final Node noteNode = node;
          // Writes note date / time in format yyyyMMddhhmm
          noteNode.setProperty( NOTE_TYPE, note.getType() );
@@ -462,9 +464,16 @@ public enum NodeWriter {
          noteNode.setProperty( NOTE_EPISODE, note.getEpisode() );
          noteNode.setProperty( NOTE_TEXT, note.getText() );
 //         node.setProperty( NOTE_NAME, note.getId() );
+         System.out.println("getting sections for" + node.getId());
          note.getSections().forEach( s -> addSectionInfo( graphDb, log, noteNode, s ) );
+         System.out.println("done getting sections for" + node.getId());
+
+         System.out.println("getting mentions for" + node.getId());
          note.getMentions().forEach( m -> addMentionInfo( graphDb, log, noteNode, m ) );
+         System.out.println("done getting mentions for" + node.getId());
+         System.out.println("getting mention releations for" + node.getId());
          note.getRelations().forEach( r -> addMentionRelation( graphDb, log, r ) );
+         System.out.println("done getting mention releations for" + node.getId());
          if (note.getCorefs() != null) {
             note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
          } else {

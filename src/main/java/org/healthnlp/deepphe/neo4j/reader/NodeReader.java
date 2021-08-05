@@ -131,9 +131,9 @@ public enum NodeReader {
         newPatientDiagnoses.add(diagnosis);
         patient.setDiagnoses(newPatientDiagnoses);
 
-        final List<BiomarkerSummary> biomarkers = getBiomarkers(graphDb, log, patientId);
+        final List<NewBiomarkerSummary> biomarkers = getBiomarkers(graphDb, log, patientId);
         //
-        //patient.setBiomarkers(biomarkers);
+        patient.setBiomarkers(biomarkers);
 
         return patient;
     }
@@ -395,10 +395,10 @@ public enum NodeReader {
         return badNote;
     }
 
-    private List<BiomarkerSummary> getBiomarkers(final GraphDatabaseService graphDb,
+    private List<NewBiomarkerSummary> getBiomarkers(final GraphDatabaseService graphDb,
                                                  final Log log,
                                                  final String patientId) {
-        final List<BiomarkerSummary> biomarkers = new ArrayList<>();
+        final List<NewBiomarkerSummary> biomarkers = new ArrayList<>();
 
         try (Transaction tx = graphDb.beginTx()) {
 
@@ -414,7 +414,7 @@ public enum NodeReader {
                     if (markerValues != null) {
                         String[] values = markerValues.split(";");
                         for (String value : values) {
-                            BiomarkerSummary biomarkerSummary = new BiomarkerSummary();
+                            NewBiomarkerSummary biomarkerSummary = new NewBiomarkerSummary();
                             biomarkerSummary.setPatientId(patientId);
                             biomarkerSummary.setTumorFactRelation(biomarker);
                             biomarkerSummary.setValueText(value);
