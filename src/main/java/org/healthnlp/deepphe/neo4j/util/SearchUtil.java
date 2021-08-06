@@ -6,7 +6,11 @@ import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.logging.Log;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -574,34 +578,53 @@ final public class SearchUtil {
    }
 
    static public Collection<Relationship> getAllOutRelationships( final GraphDatabaseService graphDb,
-                                                         final Node node ) {
+                                                                  final Log log,
+                                                                  final Node node,
+                                                                  final Collection<Relationship> knownRelationships ) {
       if ( node == null ) {
          return Collections.emptyList();
       }
       try ( Transaction tx = graphDb.beginTx() ) {
+         log.info( "Getting Out Relations for " + node.getProperty( NAME_KEY ) );
          final Collection<Relationship> relationships = new HashSet<>();
          for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
-            relationships.add( relation );
+            if ( !knownRelationships.contains( relation ) ) {
+               log.info( "   Relation " + relation.getType().name()
+                         + " to " + relation.getEndNode().getProperty( NAME_KEY ) );
+               relationships.add( relation );
+            }
          }
          tx.success();
          return relationships;
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
       } catch ( MultipleFoundException mfE ) {
+         log.error( mfE.getMessage() );
          LOGGER.error( mfE.getMessage(), mfE );
       }
       return Collections.emptyList();
    }
 
    static public Collection<Relationship> getBranchAllOutRelationships( final GraphDatabaseService graphDb,
-                                                                        final Node node ) {
-      final Collection<Relationship> relationships = getAllOutRelationships( graphDb, node );
-      final Collection<Relationship> branchRelationships = new HashSet<>( relationships );
+                                                                        final Log log,
+                                                                        final Node node,
+                                                                        final Collection<Relationship> branchRelationships,
+                                                                        final Collection<Node> handledNodes ) {
+      if ( handledNodes.contains( node ) ) {
+         return Collections.emptyList();
+      }
+      handledNodes.add( node );
+      final Collection<Relationship> relationships = getAllOutRelationships( graphDb, log, node, branchRelationships );
       for ( Relationship relationship : relationships ) {
          if ( relationship.isType( INSTANCE_OF_RELATION ) ) {
-            relationships.add( relationship );
+            branchRelationships.add( relationship );
             continue;
          }
          final Node endNode = relationship.getEndNode();
-         branchRelationships.addAll( getBranchAllOutRelationships( graphDb, endNode ) );
+         if ( endNode != null ) {
+            branchRelationships.addAll( getBranchAllOutRelationships( graphDb, log, endNode, branchRelationships,
+                                                                      handledNodes ) );
+         }
       }
       return branchRelationships;
    }
