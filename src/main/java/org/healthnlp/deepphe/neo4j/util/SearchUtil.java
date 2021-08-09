@@ -606,12 +606,12 @@ final public class SearchUtil {
          return Collections.emptyList();
       }
       try ( Transaction tx = graphDb.beginTx() ) {
-         log.info( "Getting Out Relations for " + node.getProperty( NAME_KEY ) );
+//         log.info( "Getting Out Relations for " + node.getProperty( NAME_KEY ) );
          final Collection<Relationship> relationships = new HashSet<>();
          for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
             if ( !knownRelationships.contains( relation ) ) {
-               log.info( "   Relation " + relation.getType().name()
-                         + " to " + relation.getEndNode().getProperty( NAME_KEY ) );
+//               log.info( "   Relation " + relation.getType().name()
+//                         + " to " + relation.getEndNode().getProperty( NAME_KEY ) );
                relationships.add( relation );
             }
          }
