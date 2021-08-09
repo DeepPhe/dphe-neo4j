@@ -1,5 +1,7 @@
 package org.healthnlp.deepphe.neo4j.node;
 
+import java.util.List;
+
 public class NewTumorFact extends NewFact {
     NewFactInfo tumorFactInfo;
 

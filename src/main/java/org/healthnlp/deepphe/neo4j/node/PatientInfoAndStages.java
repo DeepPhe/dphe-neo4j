@@ -1,10 +1,11 @@
 package org.healthnlp.deepphe.neo4j.node;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 //okay this is a good place to start tomorrow...I need the patientInfo stuff but not stages...
-public class PatientInfoAndStages extends PatientInfo {
+public class PatientInfoAndStages extends PatientInfo implements Serializable {
 //    private String patientId;
 //    private String patientName;
 //    private String birthDate;
@@ -13,6 +14,17 @@ public class PatientInfoAndStages extends PatientInfo {
 //    private String lastEncounterDate;
 //    private String getFirstEncounterDate;
     private List<String> stages;
+
+    public PatientInfoAndStages(PatientInfo patientInfo) {
+        super(patientInfo.getPatientId(),
+        patientInfo.getPatientName(),
+        patientInfo.getBirthDate(),
+        patientInfo.getLastEncounterAge(),
+        patientInfo.getFirstEncounterAge(),
+        patientInfo.getLastEncounterDate(),
+        patientInfo.getFirstEncounterDate(),
+        patientInfo.getGender());
+    }
 
     public List<String> getStages() {
         if (stages == null) {

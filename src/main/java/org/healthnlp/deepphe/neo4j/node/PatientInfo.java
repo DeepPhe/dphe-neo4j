@@ -7,7 +7,21 @@ public class PatientInfo {
     private String lastEncounterAge;
     private String firstEncounterAge;
     private String lastEncounterDate;
-    private String getFirstEncounterDate;
+    private String firstEncounterDate;
+
+    public PatientInfo() {
+
+    }
+    public PatientInfo(String patientId, String patientName, String birthDate, String lastEncounterAge, String firstEncounterAge, String lastEncounterDate, String firstEncounterDate, String gender) {
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.birthDate = birthDate;
+        this.lastEncounterAge = lastEncounterAge;
+        this.firstEncounterAge = firstEncounterAge;
+        this.lastEncounterDate = lastEncounterDate;
+        this.firstEncounterDate = firstEncounterDate;
+        this.gender = gender;
+    }
 
     public String getGender() {
         return gender;
@@ -67,11 +81,11 @@ public class PatientInfo {
         this.lastEncounterDate = lastEncounterDate;
     }
 
-    public String getGetFirstEncounterDate() {
-        return getFirstEncounterDate;
+    public String getFirstEncounterDate() {
+        return firstEncounterDate;
     }
 
-    public void setGetFirstEncounterDate(String getFirstEncounterDate) {
-        this.getFirstEncounterDate = getFirstEncounterDate;
+    public void setFirstEncounterDate(String firstEncounterDate) {
+        this.firstEncounterDate = firstEncounterDate;
     }
 }
