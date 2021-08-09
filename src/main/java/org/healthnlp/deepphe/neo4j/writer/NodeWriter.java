@@ -1,14 +1,18 @@
 package org.healthnlp.deepphe.neo4j.writer;
 
+import org.healthnlp.deepphe.neo4j.constant.Neo4jConstants;
 import org.healthnlp.deepphe.neo4j.constant.UriConstants;
 import org.healthnlp.deepphe.neo4j.node.*;
 import org.healthnlp.deepphe.neo4j.util.SearchUtil;
 import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.*;
 
@@ -67,7 +71,8 @@ public enum NodeWriter {
          tx.success();
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating all Patients node\n"
+                    + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -90,7 +95,8 @@ public enum NodeWriter {
          tx.success();
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating all Documents node\n"
+                    + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -113,7 +119,8 @@ public enum NodeWriter {
          tx.success();
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating unknown Stage node\n"
+                    + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -176,7 +183,8 @@ public enum NodeWriter {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Patient information for "
+                    + patient.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -186,10 +194,15 @@ public enum NodeWriter {
                                     final Log log,
                                     final String patientId ) {
       try ( Transaction tx = graphDb.beginTx() ) {
-         final Node allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         Node allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         if ( allPatientsNode == null ) {
+            initializeDphe( graphDb, log );
+            allPatientsNode = SearchUtil.getClassNode( graphDb, PATIENT_URI );
+         }
          if ( allPatientsNode == null ) {
             log.error(
-                  "No class node for uri " + PATIENT_URI + ".  Cannot create put patient " + patientId + " in graph." );
+                  "No class node for uri " + PATIENT_URI
+                  + ".  Cannot create put patient " + patientId + " in graph." );
             tx.success();
             return null;
          }
@@ -206,7 +219,8 @@ public enum NodeWriter {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating Patient "
+                    + patientId + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
       return null;
@@ -247,26 +261,36 @@ public enum NodeWriter {
                               final Log log,
                               final Node patientNode,
                                 final NeoplasmSummary cancer ) {
+//      log.info( "Creating Cancer node " + cancer.getId() );
       final Node cancerNode = createNeoplasmNode( graphDb, log, CANCER_LABEL, cancer );
       if ( cancerNode == null ) {
          return;
       }
+//      log.info( "Created Cancer node " + cancer.getId() );
       try ( Transaction tx = graphDb.beginTx() ) {
+//         log.info( "Creating Subject Has Cancer for " + cancer.getId() );
          createRelation( graphDb, log, patientNode, cancerNode, SUBJECT_HAS_CANCER_RELATION );
-         //ask sean...what do do about this getTumors?  I made my own cancersummary but i'm reverting for a bit
-
-            final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, cancer );
-            if ( tumorNode != null ) {
-               createRelation( graphDb, log, cancerNode, tumorNode, CANCER_HAS_TUMOR_RELATION );
+//         log.info( "created" );
+         final Collection<NeoplasmSummary> tumors = cancer.getSubSummaries();
+         if ( tumors != null && !tumors.isEmpty() ) {
+            for ( NeoplasmSummary tumor : tumors ) {
+//               log.info( "Creating Tumor node for " + tumor.getId() );
+               final Node tumorNode = createNeoplasmNode( graphDb, log, TUMOR_LABEL, tumor );
+//               log.info( "created" );
+               if ( tumorNode != null ) {
+//                  log.info( "Creating Cancer has Tumor for " + tumor.getId() );
+                  createRelation( graphDb, log, cancerNode, tumorNode, CANCER_HAS_TUMOR_RELATION );
+//                  log.info( "created" );
+               }
             }
-         tx.success();
          }
-
-       catch ( TransactionFailureException txE ) {
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Cancer information "
+                    + cancer.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -305,7 +329,8 @@ public enum NodeWriter {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Neoplasm information "
+                    + neoplasm.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -344,7 +369,8 @@ public enum NodeWriter {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating Neoplasm "
+                    + neoplasm.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
       return null;
@@ -428,6 +454,7 @@ public enum NodeWriter {
    private void addNoteInfo(  final GraphDatabaseService graphDb,
                               final Log log,
                               final Node patientNode, final Note note ) {
+      Node node = null;
       try ( Transaction tx = graphDb.beginTx() ) {
          final Node allDocumentsNode = SearchUtil.getClassNode( graphDb, EMR_NOTE_URI );
          if ( allDocumentsNode == null ) {
@@ -435,34 +462,146 @@ public enum NodeWriter {
             tx.success();
             return;
          }
-         Node node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
-         if ( node == null ) {
+//         log.info( "Checking note node " + note.getId() );
+         node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
+         if ( node != null ) {
+            // clear everything below the note so that we can rewrite it.
+//            log.info( "Have some not-null Note node:\n"
+//                       + node.getAllProperties().entrySet().stream()
+//                             .map( e -> e.getKey() + " = " + e.getValue() )
+//                             .collect( Collectors.joining("\n") ) );
+            clearNode( graphDb, log, node );
+//            log.info( "Done clearing note.  Removing Properties." );
+            node.removeProperty( NOTE_TYPE );
+//         log.info( "Setting note date " + note.getDate() );
+            node.removeProperty( NOTE_DATE );
+//         log.info( "Setting note episode " + note.getEpisode() );
+            node.removeProperty( NOTE_EPISODE );
+//         log.info( "Setting note text" );
+            node.removeProperty( NOTE_TEXT );
+//            log.info( "Done removing properties." );
+         } else {
+//            log.info( "Creating note node " + note.getId() );
             node = graphDb.createNode( TEXT_DOCUMENT_LABEL );
+//            log.info( "Setting note name " + note.getId() );
             node.setProperty( NAME_KEY, note.getId() );
+//            log.info( "Setting instance of " + note.getId() );
+            setInstanceOf( graphDb, log, node, allDocumentsNode );
+//            log.info( "Creating relation subject has note" );
+            createRelation( graphDb, log, patientNode, node, SUBJECT_HAS_NOTE_RELATION );
          }
-         final Node noteNode = node;
-
-         setInstanceOf( graphDb, log, noteNode, allDocumentsNode );
-         createRelation( graphDb, log, patientNode, noteNode, SUBJECT_HAS_NOTE_RELATION );
-
          // Writes note date / time in format yyyyMMddhhmm
-         noteNode.setProperty( NOTE_TYPE, note.getType() );
-         noteNode.setProperty( NOTE_DATE, note.getDate() );
-         noteNode.setProperty( NOTE_EPISODE, note.getEpisode() );
-         noteNode.setProperty( NOTE_TEXT, note.getText() );
+//         log.info( "Setting note type " + note.getType() );
+         node.setProperty( NOTE_TYPE, note.getType() );
+//         log.info( "Setting note date " + note.getDate() );
+         node.setProperty( NOTE_DATE, note.getDate() );
+//         log.info( "Setting note episode " + note.getEpisode() );
+         node.setProperty( NOTE_EPISODE, note.getEpisode() );
+//         log.info( "Setting note text" );
+         node.setProperty( NOTE_TEXT, note.getText() );
 //         node.setProperty( NOTE_NAME, note.getId() );
-         note.getSections().forEach( s -> addSectionInfo( graphDb, log, noteNode, s ) );
-         note.getMentions().forEach( m -> addMentionInfo( graphDb, log, noteNode, m ) );
-         note.getRelations().forEach( r -> addMentionRelation( graphDb, log, r ) );
-         note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
-
          tx.success();
       } catch ( TransactionFailureException txE ) {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Note information "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
+      }
+
+      final Node noteNode = node;
+      try ( Transaction tx = graphDb.beginTx() ) {
+//         log.info( "Setting note sections" );
+         note.getSections().forEach( s -> addSectionInfo( graphDb, log, noteNode, s ) );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note sections "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+
+      try ( Transaction tx = graphDb.beginTx() ) {
+//         log.info( "Setting note mentions" );
+         note.getMentions().forEach( m -> addMentionInfo( graphDb, log, noteNode, m ) );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note mentions "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+
+      try ( Transaction tx = graphDb.beginTx() ) {
+         //         log.info( "Setting note relations" );
+         note.getRelations().forEach( r -> addMentionRelation( graphDb, log, r ) );
+//         log.error( "Setting note corefs" );
+//         note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
+//         log.info( "Done" );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note relations "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+   }
+
+   private void clearNode( final GraphDatabaseService graphDb,
+                           final Log log, final Node node ) {
+      if ( node == null ) {
+         return;
+      }
+      final Collection<Relationship> noteRelationships
+            = SearchUtil.getBranchAllOutRelationships( graphDb, log, node, new HashSet<>(), new HashSet<>() );
+      final Collection<Node> endNodes = new HashSet<>( noteRelationships.size() );
+      try ( Transaction tx = graphDb.beginTx() ) {
+         for ( Relationship relationship : noteRelationships ) {
+            final Node startNode = relationship.getStartNode();
+            final Node endNode = relationship.getEndNode();
+            if ( !relationship.isType( INSTANCE_OF_RELATION ) ) {
+               if ( endNode != null ) {
+                  endNodes.add( endNode );
+               }
+               if ( startNode != null && !startNode.equals( node ) ) {
+//                  log.info( "Deleting Relationship " + relationship.getType().name()
+//                            + " " + relationship.getStartNode().getProperty( NAME_KEY )
+//                            + " " + relationship.getEndNode().getProperty( NAME_KEY ));
+                  final Collection<String> propertyKeys = new HashSet<>();
+                  relationship.getPropertyKeys().forEach( propertyKeys::add );
+                  for ( String key : propertyKeys ) {
+                     relationship.removeProperty( key );
+                  }
+                  relationship.delete();
+//                  log.info( "deletion done" );
+               }
+            }
+         }
+         tx.success();
+      } catch ( MultipleFoundException mfE ) {
+         log.error( mfE.getMessage(), mfE );
+      }
+      try ( Transaction tx = graphDb.beginTx() ) {
+         for ( Node endNode : endNodes ) {
+//            log.info( "Deleting Node " + endNode.getProperty( NAME_KEY ) + " " + endNode.getId() );
+            final Collection<String> propertyKeys = new HashSet<>();
+            endNode.getPropertyKeys().forEach( propertyKeys::add );
+            for ( String key : propertyKeys ) {
+               endNode.removeProperty( key );
+            }
+            endNode.delete();
+//            log.info( "deletion done" );
+         }
+         tx.success();
+      } catch ( MultipleFoundException mfE ) {
+         log.error( mfE.getMessage(), mfE );
       }
    }
 
@@ -495,7 +634,8 @@ public enum NodeWriter {
          log.error( mfE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Section information "
+                    + section.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -532,6 +672,7 @@ public enum NodeWriter {
 //            tx.success();
 //            return sameNode;
 //         }
+//         log.info( "Creating Mention node " + mention.getId() );
          final Node node = graphDb.createNode( TEXT_MENTION_LABEL );
          node.setProperty( NAME_KEY, mention.getId() );
 //         annotationNodes.put( annotation, node );
@@ -554,13 +695,22 @@ public enum NodeWriter {
          if ( noteNode != null ) {
             createRelation( graphDb, log, noteNode, node, NOTE_HAS_TEXT_MENTION_RELATION );
          }
+//         log.info( "Created mention node " + mention.getId() + " " + node.getId() );
+
+         final Node sourceNode = SearchUtil.getLabeledNode( graphDb, TEXT_MENTION_LABEL, mention.getId() );
+         if ( sourceNode != null ) {
+//            log.info( "Have Mention node " + mention.getId() + " " + sourceNode.getId() );
+         } else {
+            log.error( "Do not have mention node " + mention.getId() );
+         }
 
          tx.success();
       } catch ( MultipleFoundException mfE ) {
          log.error( mfE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Mention information "
+                    + mention.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -653,7 +803,8 @@ public enum NodeWriter {
          log.error( mfE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while adding Coreference\n"
+                    + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }
@@ -704,7 +855,8 @@ public enum NodeWriter {
          log.error( mfE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception " + e.getMessage() );
+         log.error( "Ignoring Exception while creating relation "
+                    + relationshipType.name() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
    }

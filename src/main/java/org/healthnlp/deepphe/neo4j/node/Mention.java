@@ -9,6 +9,8 @@ package org.healthnlp.deepphe.neo4j.node;
 public class Mention {
    private String id;
    private String classUri;
+   private String noteId;
+   private String noteType;
    private int begin;
    private int end;
    private boolean negated;
@@ -32,6 +34,22 @@ public class Mention {
 
    public void setClassUri( final String classUri ) {
       this.classUri = classUri;
+   }
+
+   public String getNoteId() {
+      return noteId;
+   }
+
+   public void setNoteId( final String noteId ) {
+      this.noteId = noteId;
+   }
+
+   public String getNoteType() {
+      return noteType;
+   }
+
+   public void setNoteType( final String noteType ) {
+      this.noteType = noteType;
    }
 
    public int getBegin() {
