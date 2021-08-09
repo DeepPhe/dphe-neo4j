@@ -454,6 +454,7 @@ public enum NodeWriter {
    private void addNoteInfo(  final GraphDatabaseService graphDb,
                               final Log log,
                               final Node patientNode, final Note note ) {
+      Node node = null;
       try ( Transaction tx = graphDb.beginTx() ) {
          final Node allDocumentsNode = SearchUtil.getClassNode( graphDb, EMR_NOTE_URI );
          if ( allDocumentsNode == null ) {
@@ -461,15 +462,24 @@ public enum NodeWriter {
             tx.success();
             return;
          }
-         log.info( "Checking note node " + note.getId() );
-         Node node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
+//         log.info( "Checking note node " + note.getId() );
+         node = SearchUtil.getLabeledNode( graphDb, TEXT_DOCUMENT_LABEL, note.getId() );
          if ( node != null ) {
             // clear everything below the note so that we can rewrite it.
-            log.info( "Have some not-null Note node:\n"
-                       + node.getAllProperties().entrySet().stream()
-                             .map( e -> e.getKey() + " = " + e.getValue() )
-                             .collect( Collectors.joining("\n") ) );
+//            log.info( "Have some not-null Note node:\n"
+//                       + node.getAllProperties().entrySet().stream()
+//                             .map( e -> e.getKey() + " = " + e.getValue() )
+//                             .collect( Collectors.joining("\n") ) );
             clearNode( graphDb, log, node );
+//            log.info( "Done clearing note.  Removing Properties." );
+            node.removeProperty( NOTE_TYPE );
+//         log.info( "Setting note date " + note.getDate() );
+            node.removeProperty( NOTE_DATE );
+//         log.info( "Setting note episode " + note.getEpisode() );
+            node.removeProperty( NOTE_EPISODE );
+//         log.info( "Setting note text" );
+            node.removeProperty( NOTE_TEXT );
+//            log.info( "Done removing properties." );
          } else {
 //            log.info( "Creating note node " + note.getId() );
             node = graphDb.createNode( TEXT_DOCUMENT_LABEL );
@@ -480,22 +490,55 @@ public enum NodeWriter {
 //            log.info( "Creating relation subject has note" );
             createRelation( graphDb, log, patientNode, node, SUBJECT_HAS_NOTE_RELATION );
          }
-         final Node noteNode = node;
          // Writes note date / time in format yyyyMMddhhmm
 //         log.info( "Setting note type " + note.getType() );
-         noteNode.setProperty( NOTE_TYPE, note.getType() );
+         node.setProperty( NOTE_TYPE, note.getType() );
 //         log.info( "Setting note date " + note.getDate() );
-         noteNode.setProperty( NOTE_DATE, note.getDate() );
+         node.setProperty( NOTE_DATE, note.getDate() );
 //         log.info( "Setting note episode " + note.getEpisode() );
-         noteNode.setProperty( NOTE_EPISODE, note.getEpisode() );
+         node.setProperty( NOTE_EPISODE, note.getEpisode() );
 //         log.info( "Setting note text" );
-         noteNode.setProperty( NOTE_TEXT, note.getText() );
+         node.setProperty( NOTE_TEXT, note.getText() );
 //         node.setProperty( NOTE_NAME, note.getId() );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note information "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+
+      final Node noteNode = node;
+      try ( Transaction tx = graphDb.beginTx() ) {
 //         log.info( "Setting note sections" );
          note.getSections().forEach( s -> addSectionInfo( graphDb, log, noteNode, s ) );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note sections "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+
+      try ( Transaction tx = graphDb.beginTx() ) {
 //         log.info( "Setting note mentions" );
          note.getMentions().forEach( m -> addMentionInfo( graphDb, log, noteNode, m ) );
-//         log.info( "Setting note relations" );
+         tx.success();
+      } catch ( TransactionFailureException txE ) {
+         log.error( txE.getMessage() );
+      } catch ( Exception e ) {
+         // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
+         log.error( "Ignoring Exception while adding Note mentions "
+                    + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
+         // Attempt to continue.
+      }
+
+      try ( Transaction tx = graphDb.beginTx() ) {
+         //         log.info( "Setting note relations" );
          note.getRelations().forEach( r -> addMentionRelation( graphDb, log, r ) );
 //         log.error( "Setting note corefs" );
 //         note.getCorefs().forEach( c -> addMentionCoref( graphDb, log, c ) );
@@ -505,7 +548,7 @@ public enum NodeWriter {
          log.error( txE.getMessage() );
       } catch ( Exception e ) {
          // While it is bad practice to catch pure Exception, neo4j throws undeclared exceptions of all types.
-         log.error( "Ignoring Exception while adding Note information "
+         log.error( "Ignoring Exception while adding Note relations "
                     + note.getId() + "\n" + e.getClass().getSimpleName() + "\n" + e.getMessage() );
          // Attempt to continue.
       }
@@ -528,7 +571,16 @@ public enum NodeWriter {
                   endNodes.add( endNode );
                }
                if ( startNode != null && !startNode.equals( node ) ) {
+//                  log.info( "Deleting Relationship " + relationship.getType().name()
+//                            + " " + relationship.getStartNode().getProperty( NAME_KEY )
+//                            + " " + relationship.getEndNode().getProperty( NAME_KEY ));
+                  final Collection<String> propertyKeys = new HashSet<>();
+                  relationship.getPropertyKeys().forEach( propertyKeys::add );
+                  for ( String key : propertyKeys ) {
+                     relationship.removeProperty( key );
+                  }
                   relationship.delete();
+//                  log.info( "deletion done" );
                }
             }
          }
@@ -538,7 +590,14 @@ public enum NodeWriter {
       }
       try ( Transaction tx = graphDb.beginTx() ) {
          for ( Node endNode : endNodes ) {
+//            log.info( "Deleting Node " + endNode.getProperty( NAME_KEY ) + " " + endNode.getId() );
+            final Collection<String> propertyKeys = new HashSet<>();
+            endNode.getPropertyKeys().forEach( propertyKeys::add );
+            for ( String key : propertyKeys ) {
+               endNode.removeProperty( key );
+            }
             endNode.delete();
+//            log.info( "deletion done" );
          }
          tx.success();
       } catch ( MultipleFoundException mfE ) {
@@ -613,6 +672,7 @@ public enum NodeWriter {
 //            tx.success();
 //            return sameNode;
 //         }
+//         log.info( "Creating Mention node " + mention.getId() );
          final Node node = graphDb.createNode( TEXT_MENTION_LABEL );
          node.setProperty( NAME_KEY, mention.getId() );
 //         annotationNodes.put( annotation, node );
@@ -634,6 +694,14 @@ public enum NodeWriter {
 
          if ( noteNode != null ) {
             createRelation( graphDb, log, noteNode, node, NOTE_HAS_TEXT_MENTION_RELATION );
+         }
+//         log.info( "Created mention node " + mention.getId() + " " + node.getId() );
+
+         final Node sourceNode = SearchUtil.getLabeledNode( graphDb, TEXT_MENTION_LABEL, mention.getId() );
+         if ( sourceNode != null ) {
+//            log.info( "Have Mention node " + mention.getId() + " " + sourceNode.getId() );
+         } else {
+            log.error( "Do not have mention node " + mention.getId() );
          }
 
          tx.success();
