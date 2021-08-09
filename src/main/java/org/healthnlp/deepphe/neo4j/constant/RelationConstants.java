@@ -62,9 +62,9 @@ final public class RelationConstants {
    static public final String HAS_PATHOLOGIC_N = "has_Pathologic_N";
    static public final String HAS_PATHOLOGIC_M = "has_Pathologic_M";
 
-   static public final String HAS_ER_STATUS = "has_ER_Status";
-   static public final String HAS_PR_STATUS = "has_PR_Status";
-   static public final String HAS_HER2_STATUS = "has_HER2_Status";
+   static public final String HAS_ER_STATUS = "ER_";
+   static public final String HAS_PR_STATUS = "PR_";
+   static public final String HAS_HER2_STATUS = "HER2";
 
    public static final String HAS_BODY_MODIFIER = "hasBodySiteModifier";
 //   public static final String HAS_CLINICAL_T_CLASSIFICATION = "hasClinicalTClassification";

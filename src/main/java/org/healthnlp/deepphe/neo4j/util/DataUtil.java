@@ -85,6 +85,23 @@ final public class DataUtil {
         return "";
     }
 
+    public static String safeGetProperty(final Node node, final String propertyName, final String defaultValue) {
+        try {
+            if (node.hasProperty(propertyName)) {
+                Object value = node.getProperty(propertyName);
+                String stringValue = value.toString();
+                return stringValue;
+            } else {
+                return defaultValue;
+            }
+        } catch (Exception e) {
+            // log.error(e.getMessage());
+            throw e;
+        }
+
+
+    }
+
     static public String getUri( final GraphDatabaseService graphDb, final Node node ) {
         try ( Transaction tx = graphDb.beginTx() ) {
             final Node typeClass = getInstanceClass( graphDb, node );
@@ -177,6 +194,7 @@ final public class DataUtil {
     }
 
     static public String getRelationPrettyName( final String relationName ) {
+        if (relationName != null) {
         String hasOnly = relationName.replace( "Disease_", "" );
         hasOnly = hasOnly.replace( "Regimen_", "" );
         if ( hasOnly.toLowerCase().startsWith( "has_" ) ) {
@@ -203,12 +221,19 @@ final public class DataUtil {
             adjustedLength++;
         }
         return new String( Arrays.copyOf( adjusted, adjustedLength ) );
+        }
+        return null;
     }
 
 
     // Convert note date / time string in format yyyyMMddhhmm to yyyy/mm/dd
     // viz wants only the date part
     static public String getReportDate( final String compactDate ) {
+        if (compactDate.startsWith(NOTE_DATE)) {
+            //JDL: hacky?  if the date, very specifically, begins with "Note_Date" then lets assume it's a more
+            //specific error (e.g. "Note_Date_property_not_found") and move on.
+            return compactDate;
+        }
         if ( compactDate.length() != 12 ) {
             return "1999/01/01";
         }

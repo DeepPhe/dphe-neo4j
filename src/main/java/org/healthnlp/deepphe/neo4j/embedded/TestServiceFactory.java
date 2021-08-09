@@ -35,7 +35,8 @@ public enum TestServiceFactory {
    static public final String NOTE_ID_1 = PATIENT_ID_1 + "_doc1_RAD";
    static public final String NOTE_ID_2 = PATIENT_ID_2 + "_doc1_NOTE";
 
-   static private final String LOCAL_GRAPH_DB = "resources/graph/neo4j/ontology.db";
+  // static private final String LOCAL_GRAPH_DB = "resources/graph/neo4j/ontology.db";
+   static private final String LOCAL_GRAPH_DB = "/Users/johnlevander/dev/neo4j-community-3.5.12/data/databases/ontology.db";
 
 
    final private GraphDatabaseService _graphDb;
@@ -47,11 +48,11 @@ public enum TestServiceFactory {
 
       NodeWriter.getInstance().initializeDphe( _graphDb, log );
 
-      addPatient( _graphDb, log, createPatient( PATIENT_ID_1 ) );
-      addPatient( _graphDb, log, createPatient( PATIENT_ID_2 ) );
-
-      addNote( _graphDb, log, PATIENT_ID_1, createNote( NOTE_ID_1, "Some fake RAD text.", "RAD" ) );
-      addNote( _graphDb, log, PATIENT_ID_2, createNote( NOTE_ID_2, "Some fake NOTE text.", "NOTE" ) );
+//      addPatient( _graphDb, log, createPatient( PATIENT_ID_1 ) );
+//      addPatient( _graphDb, log, createPatient( PATIENT_ID_2 ) );
+//
+//      addNote( _graphDb, log, PATIENT_ID_1, createNote( NOTE_ID_1, "Some fake RAD text.", "RAD" ) );
+//      addNote( _graphDb, log, PATIENT_ID_2, createNote( NOTE_ID_2, "Some fake NOTE text.", "NOTE" ) );
    }
 
    static public String getGraphDir() {
@@ -68,10 +69,12 @@ public enum TestServiceFactory {
          System.out.println( "No Database exists at: " + graphDbPath );
          System.exit( -1 );
       }
-      final GraphDatabaseService graphDb = new GraphDatabaseFactory()
-            .newEmbeddedDatabaseBuilder( graphDbFile )
-            .setConfig( GraphDatabaseSettings.read_only, "false" )
-            .newGraphDatabase();
+
+
+      final GraphDatabaseService graphDb = new GraphDatabaseFactory().
+            newEmbeddedDatabaseBuilder( graphDbFile )
+            .setConfig( GraphDatabaseSettings.read_only, "true" ).
+             newGraphDatabase();
       if ( !graphDb.isAvailable( 500 ) ) {
          System.out.println( "Could not initialize neo4j connection for: " + graphDbPath );
          System.exit( -1 );
@@ -85,6 +88,7 @@ public enum TestServiceFactory {
       final Patient patient = new Patient();
       patient.setId( id );
       patient.setNotes( Collections.emptyList() );
+      //patient.setDiagnoses( Collections.emptyList());
       return patient;
    }
 
