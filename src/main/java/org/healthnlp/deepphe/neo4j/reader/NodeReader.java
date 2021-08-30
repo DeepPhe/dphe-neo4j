@@ -13,10 +13,7 @@ import org.neo4j.graphdb.*;
 import org.neo4j.logging.Log;
 import org.neo4j.procedure.Name;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -1234,32 +1231,30 @@ public enum NodeReader {
 
         List<NewMentionedTerm> mentionedTerms = new ArrayList<>();
         for (NeoplasmSummary cancer : Objects.requireNonNull(cancers)) {
-            List<NeoplasmSummary> tumors = cancer.getSubSummaries();
-            for (NeoplasmSummary tumorSummary : tumors) {
-                List<NeoplasmAttribute> tumorFacts = tumorSummary.getAttributes();
-                for (NeoplasmAttribute fact : tumorFacts) {
-                    if (fact.getId().equalsIgnoreCase(factId)) {  //this currently never matches...
-                        //use direct evidence to build the "mention" datastructure
-                        NewFactInfo factInfo = new NewFactInfo();
-                        factInfo.setName(fact.getName());
-                        factInfo.setId(fact.getId());
-                        factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
-                        factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
-                        for (Mention mention : fact.getDirectEvidence()) {
-                            NewMentionedTerm mentionedTerm = new NewMentionedTerm();
-                            mentionedTerm.setTerm(mention.getClassUri());
-                            mentionedTerm.setReportId(mention.getNoteId());
-                            mentionedTerm.setReportType(mention.getNoteType());
-                            mentionedTerm.setReportName(mention.getNoteId());
-                            mentionedTerm.setBegin(mention.getBegin());
-                            mentionedTerm.setEnd(mention.getEnd());
-                            mentionedTerms.add(mentionedTerm);
-                            System.out.println("FactId: " + factId + "\tMention: " + mention.getClassUri());
-                        }
+            List<NeoplasmAttribute> facts = cancer.getAttributes();
+            for (NeoplasmAttribute fact : facts) {
+                if (fact.getId().equalsIgnoreCase(factId)) {
+                    //use direct evidence to build the "mention" datastructure
+                    NewFactInfo factInfo = new NewFactInfo();
+                    factInfo.setName(fact.getName());
+                    factInfo.setId(fact.getId());
+                    factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
+                    factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
+                    for (Mention mention : fact.getDirectEvidence()) {
+                        NewMentionedTerm mentionedTerm = new NewMentionedTerm();
+                        mentionedTerm.setTerm(mention.getClassUri());
+                        mentionedTerm.setReportId(mention.getNoteId());
+                        mentionedTerm.setReportType(mention.getNoteType());
+                        mentionedTerm.setReportName(mention.getNoteId());
+                        mentionedTerm.setBegin(mention.getBegin());
+                        mentionedTerm.setEnd(mention.getEnd());
+                        mentionedTerms.add(mentionedTerm);
+                        System.out.println("FactId: " + factId + "\tMention: " + mention.getClassUri());
                     }
                 }
             }
         }
+
         factInfoAndGroupedTextProvenances.setMentionedTerms(mentionedTerms);
 //
 //        final Map<String, Object> factData = new HashMap<>();
