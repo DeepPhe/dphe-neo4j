@@ -125,7 +125,7 @@ final public class UriConstants {
 
 
    //
-   //          PROCEDURE         Therapeutic or Inteventional Procedure
+   //          PROCEDURE         Therapeutic or Interventional Procedure
    //
 
    static public final String DIAGNOSTIC_TEST = "Diagnostic_Procedure";
@@ -549,7 +549,11 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
+            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
+            final Collection<String> skin_parts = SearchUtil.getBranchUris( graphDb, "Skin_Part" );
+            skin_parts.removeAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
+            LOCATION_URIS.removeAll( skin_parts );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
 

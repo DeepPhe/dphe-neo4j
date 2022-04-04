@@ -43,7 +43,7 @@
          <version>2.8.6</version>
       </dependency>
 
-      <!-- TODO : Upgrade to neo4j 2.x
+      <!-- TODO : Upgrade to log4j 2.x
            This will require changing all classes that use log4j and the config.xml
            See Neo4jRelationUtil for an example.
            Also the log4j upgrade page https://logging.apache.org/log4j/2.x/manual/migration.html
