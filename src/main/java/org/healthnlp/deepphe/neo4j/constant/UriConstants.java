@@ -548,6 +548,8 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Musculoskeletal_System_Part" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
 //            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
             // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
