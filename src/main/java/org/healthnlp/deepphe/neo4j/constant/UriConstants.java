@@ -548,16 +548,17 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
-//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Musculoskeletal_System_Part" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cartilage" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Synovial_Bursa" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
-//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
-            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
-            final Collection<String> skin_parts = SearchUtil.getBranchUris( graphDb, "Skin_Part" );
-            skin_parts.removeAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
-            LOCATION_URIS.removeAll( skin_parts );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
+            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
+            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
 
             POSITIVE_VALUE_URIS.add( "Positive" );
             POSITIVE_VALUE_URIS.add( "Negative" );
