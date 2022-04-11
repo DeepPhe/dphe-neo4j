@@ -216,6 +216,9 @@ final public class UriConstants {
    static public final String STAGE = "Tumor_Stage_Finding";
    static public final String STAGE_UNKNOWN = "Stage_Unknown";
 
+   static public final String GRADE = "Finding_Of_Grade";
+
+
    static public final String LYMPH_NODE = "Lymph_Node";
 
    // Semantic Type "Body Part, Organ, or Organ Component".  Parent of "Left_Breast", "Right_Breast".
@@ -400,6 +403,12 @@ final public class UriConstants {
       return CANCER_STAGES;
    }
 
+   static private final Collection<String> CANCER_GRADES = new ArrayList<>();
+
+   static public Collection<String> getCancerGrades( final GraphDatabaseService graphDb ) {
+      initializeUris( graphDb );
+      return CANCER_GRADES;
+   }
 
 
    static private final Object URI_LOCK = new Object();
@@ -534,6 +543,10 @@ final public class UriConstants {
             SearchUtil.getBranchUris( graphDb, STAGE ).stream()
                       .filter( u -> u.length() < 12 )
                       .forEach( CANCER_STAGES::add );
+
+            SearchUtil.getBranchUris( graphDb, GRADE ).stream()
+                      .filter( u -> u.length() < 12 )
+                      .forEach( CANCER_GRADES::add );
 
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN ) );
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, BODY_REGION ) );
