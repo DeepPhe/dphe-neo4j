@@ -298,6 +298,12 @@ final public class UriConstants {
       return PRIMARY_URIS;
    }
 
+   static private final Collection<String> UNKOWN_PRIMARY_URIS = new HashSet<>();
+   static public Collection<String> getUnknownPrimaryUris( final GraphDatabaseService graphDb ) {
+      initializeUris( graphDb );
+      return PRIMARY_URIS;
+   }
+
    static private final Collection<String> MALIGNANT_URIS = new HashSet<>();
    static public Collection<String> getMalignantTumorUris( final GraphDatabaseService graphDb ) {
       initializeUris( graphDb );
@@ -462,6 +468,8 @@ final public class UriConstants {
             GENERIC_URIS.removeAll( BENIGN_URIS );
             GENERIC_URIS.removeAll( PRIMARY_URIS );
             GENERIC_URIS.removeAll( METASTASIS_URIS );
+
+            UNKOWN_PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Neoplasms__Unknown_Primary" ) );
 
             CANCER_TYPE_MAP.put( "Carcinoma", SearchUtil.getBranchUris( graphDb, "Carcinoma" ) );
             CANCER_TYPE_MAP.put( "Sarcoma", SearchUtil.getBranchUris( graphDb, "Sarcoma" ) );
