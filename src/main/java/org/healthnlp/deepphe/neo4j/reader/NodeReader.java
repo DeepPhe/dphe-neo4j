@@ -883,6 +883,7 @@ public enum NodeReader {
                 NewFactInfo newCancerFactInfo = new NewFactInfo();
                 newCancerFactInfo.setId(neoplasmAttribute.getId());
                 newCancerFactInfo.setName(neoplasmAttribute.getClassUri());
+                newCancerFactInfo.setValue(neoplasmAttribute.getValue());
 
                 //some of these ^^^ are null?
                 newCancerFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newCancerFactInfo.getName()));
@@ -909,6 +910,7 @@ public enum NodeReader {
                     NewFactInfo newTumorFactInfo = new NewFactInfo();
                     newTumorFactInfo.setId(tumorAttribute.getId());
                     newTumorFactInfo.setName(tumorAttribute.getClassUri());
+                    newTumorFactInfo.setValue(tumorAttribute.getValue());
                     newTumorFactInfo.setPrettyName(DataUtil.getRelationPrettyName(newTumorFactInfo.getName()));
                     tumorFact.setTumorFactInfo(newTumorFactInfo);
                     tumorFact.setRelationPrettyName(DataUtil.getRelationPrettyName(tumorAttribute.getName()));
@@ -1238,6 +1240,7 @@ public enum NodeReader {
                     NewFactInfo factInfo = new NewFactInfo();
                     factInfo.setName(fact.getName());
                     factInfo.setId(fact.getId());
+                    factInfo.setValue(fact.getValue());
                     factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
                     factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
                     for (Mention mention : fact.getDirectEvidence()) {
@@ -1249,7 +1252,6 @@ public enum NodeReader {
                         mentionedTerm.setBegin(mention.getBegin());
                         mentionedTerm.setEnd(mention.getEnd());
                         mentionedTerms.add(mentionedTerm);
-                        System.out.println("FactId: " + factId + "\tMention: " + mention.getClassUri());
                     }
                 }
             }
