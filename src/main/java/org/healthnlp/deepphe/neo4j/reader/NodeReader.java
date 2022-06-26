@@ -751,16 +751,12 @@ public enum NodeReader {
     }
 
     public static NewStructuredPatientData getStructuredPatientDataForPatientId(String actualPatientId) {
-        Gson gson = new Gson();
-        JsonReader reader = new JsonReader(new InputStreamReader(NodeReader.class.getClassLoader().getResourceAsStream("fake_patient_structured_data.json")));
-        List<NewStructuredPatientData> data = gson.fromJson(reader, new TypeToken<List<NewStructuredPatientData>>() {
-        }.getType());
-        for (NewStructuredPatientData structuredPatientData : data) {
-            if (structuredPatientData.getPatientId().equals(actualPatientId)) {
-                return structuredPatientData;
-            }
-        }
-        return null;
+       ;
+        //the idea is to try to get the same random person values, given the same actualPatientId
+        StructuredPatientDataGenerator structuredPatientDataGenerator = new StructuredPatientDataGenerator(actualPatientId);
+        return structuredPatientDataGenerator.iterator().next();
+
+
     }
 
     //TODO: throwing generic exception, make it more specific
@@ -1328,6 +1324,18 @@ public enum NodeReader {
 //        }
         return factInfoAndGroupedTextProvenances;
     }
+
+    public static void main(String[] args) {
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("test"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("test"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("test"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("23"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("Patient 8"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("Patient 28"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("Patient 8"));
+        System.out.println(NodeReader.getStructuredPatientDataForPatientId("fake_patient7"));
+
+    }
 }
 //clinic vs pathologic, ultrasound,
 //T = tumor size (tx = not measured, t0=in situ, 1,2,3,4...)
@@ -1359,3 +1367,4 @@ public enum NodeReader {
 //        "temporality": ""
 //        }
 //        ],
+
