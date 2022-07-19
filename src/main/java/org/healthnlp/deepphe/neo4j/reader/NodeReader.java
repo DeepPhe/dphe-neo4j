@@ -878,7 +878,9 @@ public enum NodeReader {
 
                 NewFactInfo newCancerFactInfo = new NewFactInfo();
                 newCancerFactInfo.setId(neoplasmAttribute.getId());
-                newCancerFactInfo.setName(neoplasmAttribute.getClassUri());
+                //7-15-2022
+                //newCancerFactInfo.setName(neoplasmAttribute.getClassUri());
+                newCancerFactInfo.setName(neoplasmAttribute.getName());
                 newCancerFactInfo.setValue(neoplasmAttribute.getValue());
 
                 //some of these ^^^ are null?
