@@ -40,6 +40,7 @@ final public class RelationConstants {
    static public final String HAS_TUMOR_TYPE = "hasTumorType";
    static public final String HAS_TREATMENT = "hasTreatment";
    static public final String HAS_STAGE = "hasCancerStage";
+   static public final String HAS_GRADE = "hasCancerGrade";
    static public final String HAS_UNKNOWN_STAGE = "hasUnknownCancerStage";
    static public final String HAS_HISTOLOGY = "hasHistologicType";
    static public final String HAS_CALCIFICATION = "hasCalcification";
@@ -61,6 +62,8 @@ final public class RelationConstants {
    static public final String HAS_PATHOLOGIC_T = "has_Pathologic_T";
    static public final String HAS_PATHOLOGIC_N = "has_Pathologic_N";
    static public final String HAS_PATHOLOGIC_M = "has_Pathologic_M";
+
+   static public final String HAS_BEHAVIOR = "hasBehavior";
 
    // These are class names, not relation names.  The relation name is HAS_BIOMARKER
    static public final String HAS_ER_STATUS = "ER_";
@@ -242,55 +245,57 @@ final public class RelationConstants {
 
    static public final Collection<String> REQUIRED_RELATIONS = Arrays.asList(
          HAS_LATERALITY,
-         HAS_TUMOR_TYPE,
-         HAS_CALCIFICATION,
+//         HAS_TUMOR_TYPE,
+//         HAS_CALCIFICATION,
          DISEASE_HAS_PRIMARY_ANATOMIC_SITE,
-         DISEASE_HAS_FINDING,
-         DISEASE_MAY_HAVE_FINDING,
-         DISEASE_HAS_NORMAL_TISSUE_ORIGIN,
-         DISEASE_HAS_NORMAL_CELL_ORIGIN,
-         HAS_METHOD,
-         HAS_TREATMENT,
+//         DISEASE_HAS_FINDING,
+//         DISEASE_MAY_HAVE_FINDING,
+//         DISEASE_HAS_NORMAL_TISSUE_ORIGIN,
+//         DISEASE_HAS_NORMAL_CELL_ORIGIN,
+//         HAS_METHOD,
+//         HAS_TREATMENT,
          // v4
          DISEASE_HAS_ASSOCIATED_ANATOMIC_SITE,
          DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
-         DISEASE_EXCLUDES_FINDING,
-         DISEASE_EXCLUDES_PRIMARY_ANATOMIC_SITE,
-         DISEASE_EXCLUDES_NORMAL_TISSUE_ORIGIN,
-         DISEASE_EXCLUDES_NORMAL_CELL_ORIGIN,
+//         DISEASE_EXCLUDES_FINDING,
+//         DISEASE_EXCLUDES_PRIMARY_ANATOMIC_SITE,
+//         DISEASE_EXCLUDES_NORMAL_TISSUE_ORIGIN,
+//         DISEASE_EXCLUDES_NORMAL_CELL_ORIGIN,
          Disease_Has_Associated_Region,
          Disease_Has_Associated_Cavity,
          Finding_Has_Associated_Site,
          Finding_Has_Associated_Region,
          Finding_Has_Associated_Cavity,
-         has_direct_procedure_site,
-         Anatomic_Structure_Is_Physical_Part_Of,
-         regional_part_of,
-         Completely_Excised_Anatomy_Has_Procedure,
-         Excised_Anatomy_Has_Procedure,
-         has_procedure_device,
-         HAS_ULCERATION,
-         HAS_BRESLOW_DEPTH,
-         HAS_PSA_LEVEL,
-         HAS_GLEASON_SCORE,
-         HAS_KI67_SCORE,
-         DISEASE_IS_GRADE,
-         HAS_CANCER_CELL_LINE,
-         HAS_HISTOLOGY,
-         REGIMEN_HAS_ACCEPTED_USE_FOR_DISEASE,
-         CHEMOTHERAPY_REGIMEN_HAS_COMPONENT,
-         Disease_Has_Accepted_Treatment_With_Regimen,
-         has_Biomarker,
-         GENE_IS_BIOMARKER_OF,
-         DISEASE_MAPPED_TO_GENE,
-         RELATED_TO_GENETIC_BIOMARKER,
-         Disease_Has_Associated_Gene,
-         has_Diagnostic_Test,
-         has_Lymph_Evidence,
-         has_Associated_Mass,
-         Neoplasm_Has_Special_Category,
-         Disease_Has_Temporal_Pattern,
-         Disease_Has_Progression
+//         has_direct_procedure_site,
+//         Anatomic_Structure_Is_Physical_Part_Of,
+//         regional_part_of,
+//         Completely_Excised_Anatomy_Has_Procedure,
+//         Excised_Anatomy_Has_Procedure,
+//         has_procedure_device,
+//         HAS_ULCERATION,
+//         HAS_BRESLOW_DEPTH,
+//         HAS_PSA_LEVEL,
+         HAS_GLEASON_SCORE
+//         HAS_KI67_SCORE,
+//         DISEASE_IS_GRADE,
+//         HAS_STAGE,
+//         HAS_GRADE,
+//         HAS_CANCER_CELL_LINE,
+//         HAS_HISTOLOGY,
+//         REGIMEN_HAS_ACCEPTED_USE_FOR_DISEASE,
+//         CHEMOTHERAPY_REGIMEN_HAS_COMPONENT,
+//         Disease_Has_Accepted_Treatment_With_Regimen,
+//         has_Biomarker,
+//         GENE_IS_BIOMARKER_OF,
+//         DISEASE_MAPPED_TO_GENE,
+//         RELATED_TO_GENETIC_BIOMARKER,
+//         Disease_Has_Associated_Gene,
+//         has_Diagnostic_Test,
+//         has_Lymph_Evidence
+//         has_Associated_Mass,
+//         Neoplasm_Has_Special_Category,
+//         Disease_Has_Temporal_Pattern,
+//         Disease_Has_Progression
    );
 
    static public Collection<String> getReverseRelations() {

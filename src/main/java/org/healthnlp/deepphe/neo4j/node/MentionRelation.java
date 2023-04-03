@@ -10,6 +10,7 @@ public class MentionRelation {
    private String type;
    private String sourceId;
    private String targetId;
+   private double confidence;
 
    public String getType() {
       return type;
@@ -33,6 +34,14 @@ public class MentionRelation {
 
    public void setTargetId( final String targetId ) {
       this.targetId = targetId;
+   }
+
+   public double getConfidence() {
+      return confidence;
+   }
+
+   public void setConfidence( final double confidence ) {
+      this.confidence = confidence;
    }
 
 }

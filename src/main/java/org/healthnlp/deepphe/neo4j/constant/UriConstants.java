@@ -427,6 +427,7 @@ final public class UriConstants {
             MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
 
             NEOPLASM_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
+            NEOPLASM_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Neoplastic_Cell" ) );
 
             // v5
             final Collection<String> NAMED_TUMOR_URIS
@@ -457,10 +458,10 @@ final public class UriConstants {
 
             METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTATIC_NEOPLASM ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Secondary_Lesion" ) );
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Metastatic_Lesion" ) );
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Secondary_Lesion" ) );
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Metastatic_Lesion" ) );
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Secondary_Lesion" ) );
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Metastatic_Lesion" ) );
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Secondary_Lesion" ) );
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Metastatic_Lesion" ) );
             PRIMARY_URIS.removeAll( METASTASIS_URIS );
 
             GENERIC_URIS.addAll( NEOPLASM_URIS );
@@ -480,42 +481,43 @@ final public class UriConstants {
             CANCER_TYPE_MAP.put( "Leukemia", SearchUtil.getBranchUris( graphDb, "Leukemia" ) );
             CANCER_TYPE_MAP.put( "Lymphoma", SearchUtil.getBranchUris( graphDb, "Lymphoma" ) );
 
+            // 3/30/2023 completely ignoring these histology uris.
             // 9 "Histologic Types" are new to ontology
             // BrCa overspecification
-            HISTOLOGY_MAP.put( "Ductal", SearchUtil.getBranchUris( graphDb, "Ductal_Breast_Carcinoma" ) );
-            HISTOLOGY_MAP.put( "Lobular", SearchUtil.getBranchUris( graphDb, "Lobular_Breast_Carcinoma" ) );
-            HISTOLOGY_MAP.put( "Mucinous", SearchUtil.getBranchUris( graphDb, "Mucinous_Neoplasm" ) );
-            HISTOLOGY_MAP.put( "Papillary", SearchUtil.getBranchUris( graphDb, "Papillary_Breast_Carcinoma" ) );
-            HISTOLOGY_MAP.put( "Tubular", SearchUtil.getBranchUris( graphDb, "Tubular_Breast_Carcinoma" ) );
-            // Ovary overspecification
-            HISTOLOGY_MAP.put( "Borderline", SearchUtil
-                  .getBranchUris( graphDb, "Borderline_Ovarian_Epithelial_Tumor" ) );
-            HISTOLOGY_MAP.put( "Brenner_Tumor", SearchUtil.getBranchUris( graphDb, "Brenner_Tumor" ) );
-            HISTOLOGY_MAP.put( "Carcinosarcoma", SearchUtil.getBranchUris( graphDb, "Carcinosarcoma" ) );
-            HISTOLOGY_MAP.put( "Clear_Cell_Sarcoma", SearchUtil
-                  .getBranchUris( graphDb, "Clear_Cell_Neoplasm" ) );
-            HISTOLOGY_MAP.put( "Dysgerminoma", SearchUtil.getBranchUris( graphDb, "Dysgerminoma" ) );
-            HISTOLOGY_MAP.put( "Endometrioid", SearchUtil
-                  .getBranchUris( graphDb, "Ovarian_Endometrioid_Adenocarcinoma" ) );
-            HISTOLOGY_MAP.put( "Epithelial_Stromal", SearchUtil
-                  .getBranchUris( graphDb, "Epithelial_Neoplasm" ) );
-            HISTOLOGY_MAP.put( "Granulosa_Cell", SearchUtil.getBranchUris( graphDb, "Granulosa_Cell" ) );
-            HISTOLOGY_MAP.put( "Immature_Teratoma", SearchUtil.getBranchUris( graphDb, "Immature_Teratoma" ) );
-            HISTOLOGY_MAP.put( "Leiomyosarcoma", SearchUtil.getBranchUris( graphDb, "Leiomyosarcoma" ) );
-            HISTOLOGY_MAP.put( "Mixed_Mesodermal_Mullerian_Tumor", SearchUtil
-                  .getBranchUris( graphDb, "Mixed_Mesodermal_Mullerian_Tumor" ) );
-
-            HISTOLOGY_MAP.put( "Papillary_Serous", SearchUtil
-                  .getBranchUris( graphDb, "Ovarian_Serous_Surface_Papillary_Adenocarcinoma" ) );
-            HISTOLOGY_MAP
-                  .put( "Serous", SearchUtil.getBranchUris( graphDb, "Serous_Neoplasm" ) );
-            HISTOLOGY_MAP.put( "Sertoli_Leydig", SearchUtil
-                  .getBranchUris( graphDb, "Ovarian_Sertoli_Leydig_Cell_Tumor" ) );
-            HISTOLOGY_MAP
-                  .put( "Squamous_Cell", SearchUtil.getBranchUris( graphDb, "Squamous_Cell_Carcinoma" ) );
-            HISTOLOGY_MAP.put( "Undifferentiated", SearchUtil
-                  .getBranchUris( graphDb, "Undifferentiated_Ovarian_Carcinoma" ) );
-            HISTOLOGY_MAP.put( "Yolk_Sac", SearchUtil.getBranchUris( graphDb, "Yolk_Sac_Tumor" ) );
+//            HISTOLOGY_MAP.put( "Ductal", SearchUtil.getBranchUris( graphDb, "Ductal_Breast_Carcinoma" ) );
+//            HISTOLOGY_MAP.put( "Lobular", SearchUtil.getBranchUris( graphDb, "Lobular_Breast_Carcinoma" ) );
+//            HISTOLOGY_MAP.put( "Mucinous", SearchUtil.getBranchUris( graphDb, "Mucinous_Neoplasm" ) );
+//            HISTOLOGY_MAP.put( "Papillary", SearchUtil.getBranchUris( graphDb, "Papillary_Breast_Carcinoma" ) );
+//            HISTOLOGY_MAP.put( "Tubular", SearchUtil.getBranchUris( graphDb, "Tubular_Breast_Carcinoma" ) );
+//            // Ovary overspecification
+//            HISTOLOGY_MAP.put( "Borderline", SearchUtil
+//                  .getBranchUris( graphDb, "Borderline_Ovarian_Epithelial_Tumor" ) );
+//            HISTOLOGY_MAP.put( "Brenner_Tumor", SearchUtil.getBranchUris( graphDb, "Brenner_Tumor" ) );
+//            HISTOLOGY_MAP.put( "Carcinosarcoma", SearchUtil.getBranchUris( graphDb, "Carcinosarcoma" ) );
+//            HISTOLOGY_MAP.put( "Clear_Cell_Sarcoma", SearchUtil
+//                  .getBranchUris( graphDb, "Clear_Cell_Neoplasm" ) );
+//            HISTOLOGY_MAP.put( "Dysgerminoma", SearchUtil.getBranchUris( graphDb, "Dysgerminoma" ) );
+//            HISTOLOGY_MAP.put( "Endometrioid", SearchUtil
+//                  .getBranchUris( graphDb, "Ovarian_Endometrioid_Adenocarcinoma" ) );
+//            HISTOLOGY_MAP.put( "Epithelial_Stromal", SearchUtil
+//                  .getBranchUris( graphDb, "Epithelial_Neoplasm" ) );
+//            HISTOLOGY_MAP.put( "Granulosa_Cell", SearchUtil.getBranchUris( graphDb, "Granulosa_Cell" ) );
+//            HISTOLOGY_MAP.put( "Immature_Teratoma", SearchUtil.getBranchUris( graphDb, "Immature_Teratoma" ) );
+//            HISTOLOGY_MAP.put( "Leiomyosarcoma", SearchUtil.getBranchUris( graphDb, "Leiomyosarcoma" ) );
+//            HISTOLOGY_MAP.put( "Mixed_Mesodermal_Mullerian_Tumor", SearchUtil
+//                  .getBranchUris( graphDb, "Mixed_Mesodermal_Mullerian_Tumor" ) );
+//
+//            HISTOLOGY_MAP.put( "Papillary_Serous", SearchUtil
+//                  .getBranchUris( graphDb, "Ovarian_Serous_Surface_Papillary_Adenocarcinoma" ) );
+//            HISTOLOGY_MAP
+//                  .put( "Serous", SearchUtil.getBranchUris( graphDb, "Serous_Neoplasm" ) );
+//            HISTOLOGY_MAP.put( "Sertoli_Leydig", SearchUtil
+//                  .getBranchUris( graphDb, "Ovarian_Sertoli_Leydig_Cell_Tumor" ) );
+//            HISTOLOGY_MAP
+//                  .put( "Squamous_Cell", SearchUtil.getBranchUris( graphDb, "Squamous_Cell_Carcinoma" ) );
+//            HISTOLOGY_MAP.put( "Undifferentiated", SearchUtil
+//                  .getBranchUris( graphDb, "Undifferentiated_Ovarian_Carcinoma" ) );
+//            HISTOLOGY_MAP.put( "Yolk_Sac", SearchUtil.getBranchUris( graphDb, "Yolk_Sac_Tumor" ) );
 
 //            DIAGNOSIS_GROUP_NAMES
             final Collection<String> sites = getChildren( graphDb, "Neoplasm_by_Site" );
@@ -553,7 +555,8 @@ final public class UriConstants {
                       .forEach( CANCER_STAGES::add );
 
             SearchUtil.getBranchUris( graphDb, GRADE ).stream()
-                      .filter( u -> u.length() < 12 )
+//                      .filter( u -> u.length() < 12 )
+                      .filter( u -> u.length() < 26 )
                       .forEach( CANCER_GRADES::add );
 
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN ) );
@@ -569,6 +572,7 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Reticuloendothelial_Cell" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
@@ -580,6 +584,10 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
             // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
+            final Collection<String> locationRemovals = LOCATION_URIS.stream()
+                                                                     .filter( u -> u.toLowerCase().contains( "tissue" ) )
+                                                                     .collect( Collectors.toSet() );
+            LOCATION_URIS.removeAll( locationRemovals );
 
             POSITIVE_VALUE_URIS.add( "Positive" );
             POSITIVE_VALUE_URIS.add( "Negative" );
