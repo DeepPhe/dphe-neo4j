@@ -424,30 +424,24 @@ final public class UriConstants {
 
             CANCER_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
             MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
-
-            // v5
+            // A lot of cancers are branched from mass.  We want to keep those as cancers.
+            final Collection<String> malignancyUris = SearchUtil.getBranchUris( graphDb, "Malignant_Neoplasm" );
+            MASS_URIS.removeAll( malignancyUris );
+            // Collect individual (not branch) uris under cancer that are called "Tumor" and "Mass".
             final Collection<String> namedTumorUris
                   = CANCER_URIS.stream()
+                               .filter( u -> !u.contains( "Malignant" ) )
                                .filter( u -> u.contains( "Tumor" ) || u.contains( "Mass" ) )
                                .collect( Collectors.toSet() );
-            // v4
             MASS_URIS.addAll( namedTumorUris );
-
+            // Get rid of neoplastic cell.
             final Collection<String> neoplasticCell = SearchUtil.getBranchUris( graphDb, "Neoplastic_Cell" );
             MASS_URIS.removeAll( neoplasticCell );
             CANCER_URIS.removeAll( neoplasticCell );
-
-            final Collection<String> namedCarcinomaUris
-                  = MASS_URIS.stream()
-                             .filter( u -> !u.contains( "Tumor" ) && !u.contains( "Mass" ) )
-                             .filter( u -> u.toLowerCase().contains( "carcinoma" )
-                                           || u.contains( "Cancer" ) )
-                             .collect( Collectors.toSet() );
-            MASS_URIS.removeAll( namedCarcinomaUris );
-
+            // Here is another trick:  The root node NEOPLASM should also be considered a mass.
+            MASS_URIS.add( NEOPLASM );
+            // Separate Mass from Cancer
             CANCER_URIS.removeAll( MASS_URIS );
-
-            CANCER_URIS.addAll( namedCarcinomaUris );
 
             MASS_NEOPLASMS.addAll( MASS_URIS );
             MASS_NEOPLASMS.addAll( CANCER_URIS );
@@ -570,22 +564,31 @@ final public class UriConstants {
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ACQUIRED_BODY_STRUCTURE ) );
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ANATOMY_GROUP ) );
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, VARIANT_ANATOMY ) );
+            // Skin part is where exocrine gland is removed so remove it first.
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
+            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
+            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_TISSUE ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Anatomic_Border" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Wall_Of_Colon" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Reticuloendothelial_Cell" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Cell" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Marrow" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cartilage" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Muscle" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Mucous_Membrane" ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Serous_Membrane" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Synovial_Bursa" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Lymphatic_Vessel" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
-            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
             final Collection<String> locationRemovals = LOCATION_URIS.stream()
                                                                      .filter( u -> u.toLowerCase().contains( "tissue" ) )
                                                                      .collect( Collectors.toSet() );

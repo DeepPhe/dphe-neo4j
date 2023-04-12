@@ -256,7 +256,7 @@ final public class RelationConstants {
 //         HAS_TREATMENT,
          // v4
          DISEASE_HAS_ASSOCIATED_ANATOMIC_SITE,
-         DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
+//         DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
 //         DISEASE_EXCLUDES_FINDING,
 //         DISEASE_EXCLUDES_PRIMARY_ANATOMIC_SITE,
 //         DISEASE_EXCLUDES_NORMAL_TISSUE_ORIGIN,
@@ -318,7 +318,7 @@ final public class RelationConstants {
    static private final Collection<String> SITE_RELATIONS = new HashSet<>( Arrays.asList(
          DISEASE_HAS_PRIMARY_ANATOMIC_SITE,
          DISEASE_HAS_ASSOCIATED_ANATOMIC_SITE,
-         DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
+//         DISEASE_HAS_METASTATIC_ANATOMIC_SITE,
          Disease_Has_Associated_Region,
          Disease_Has_Associated_Cavity,
          Finding_Has_Associated_Site,
