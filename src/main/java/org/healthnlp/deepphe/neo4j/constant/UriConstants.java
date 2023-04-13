@@ -440,6 +440,8 @@ final public class UriConstants {
             CANCER_URIS.removeAll( neoplasticCell );
             // Here is another trick:  The root node NEOPLASM should also be considered a mass.
             MASS_URIS.add( NEOPLASM );
+            // We don't want mentions of metastasis to be seen as [primary] cancers.
+            MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Metastasis" ) );
             // Separate Mass from Cancer
             CANCER_URIS.removeAll( MASS_URIS );
 
