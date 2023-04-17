@@ -430,8 +430,12 @@ final public class UriConstants {
             // Collect individual (not branch) uris under cancer that are called "Tumor" and "Mass".
             final Collection<String> namedTumorUris
                   = CANCER_URIS.stream()
-                               .filter( u -> !u.contains( "Malignant" ) )
-                               .filter( u -> u.contains( "Tumor" ) || u.contains( "Mass" ) )
+                               .filter( u -> !u.contains( "Malignant" )
+                                             && !u.contains( "adeno" )
+                                             && !u.contains( "Carc" ) )
+                               .filter( u -> u.contains( "Tumor" )
+                                             || u.contains( "Mass" )
+                                             || u.contains( "Cyst" ) )
                                .collect( Collectors.toSet() );
             MASS_URIS.addAll( namedTumorUris );
             // Get rid of neoplastic cell.
@@ -582,6 +586,9 @@ final public class UriConstants {
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
+            // Broad and Round Ligament are part of Genitalia and wanted for C57
+            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Broad_Ligament" ) );
+            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Round_Ligament" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cartilage" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Muscle" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Mucous_Membrane" ) );
