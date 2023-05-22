@@ -48,6 +48,8 @@ final public class UriConstants {
    //          ANATOMY              Remove from Locations as they may be in anatomy trees
 
    static public final String BODY_TISSUE = "Body_Tissue";
+   static public final String TISSUE = "Tissue";
+
    static public final String BODY_FLUID = "Body_Fluid";
    static public final String BODY_MISC = "Body_Miscellaneous";
    static private final String CELL = "Entire_Cell";
@@ -575,6 +577,7 @@ final public class UriConstants {
             // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
             LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_TISSUE ) );
+            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, TISSUE ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
             LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
