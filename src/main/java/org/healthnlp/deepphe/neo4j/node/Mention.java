@@ -9,6 +9,7 @@ package org.healthnlp.deepphe.neo4j.node;
 public class Mention {
    private String id;
    private String classUri;
+   private double confidence;
    private String noteId;
    private String noteType;
    private int begin;
@@ -34,6 +35,14 @@ public class Mention {
 
    public void setClassUri( final String classUri ) {
       this.classUri = classUri;
+   }
+
+   public double getConfidence() {
+      return confidence;
+   }
+
+   public void setConfidence( final double confidence ) {
+      this.confidence = confidence;
    }
 
    public String getNoteId() {

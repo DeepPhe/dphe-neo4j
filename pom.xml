@@ -10,6 +10,7 @@
    <description>Cancer Deep Phenotype Extraction (DeepPhe) Neo4j code module</description>
    <packaging>jar</packaging>
    <properties>
+      <deepphe.version>latest</deepphe.version>
       <ctakes.version>4.0.1-SNAPSHOT</ctakes.version>
       <maven.compiler.source>1.8</maven.compiler.source>
       <maven.compiler.target>1.8</maven.compiler.target>
@@ -66,9 +67,43 @@
       </dependencies>
 
    <build>
+      <finalName>deepphe-neo4j</finalName>
       <!-- It's good practice to explicitly declare versions for all plugins -->
       <pluginManagement>
          <plugins>
+
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-install-plugin</artifactId>
+               <version>2.4</version>
+               <executions>
+<!--                  <execution>-->
+<!--                     <id>default-install</id>-->
+<!--                     <goals>-->
+<!--                        <goal>install</goal>-->
+<!--                     </goals>-->
+<!--                     <phase>install</phase>-->
+<!--                     <configuration>-->
+<!--                        <skip>true</skip>-->
+<!--                     </configuration>-->
+<!--                  </execution>-->
+
+                  <execution>
+                     <id>latest-install</id>
+                     <goals>
+                        <goal>install-file</goal>
+                     </goals>
+                     <phase>install</phase>
+                     <configuration>
+                        <file>${project.build.directory}/${project.build.finalName}.jar</file>
+                        <generatePom>false</generatePom>
+                        <pomFile>pom.xml</pomFile>
+                        <version>${deepphe.version}</version>
+                     </configuration>
+                  </execution>
+               </executions>
+            </plugin>
+
          </plugins>
       </pluginManagement>
    </build>
