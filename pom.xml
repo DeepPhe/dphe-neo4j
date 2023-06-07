@@ -17,6 +17,11 @@
       <neo4j.version>3.5.20</neo4j.version>
    </properties>
    <dependencies>
+      <dependency>
+         <groupId>org.healthnlp</groupId>
+         <artifactId>deepphe-core</artifactId>
+         <version>0.6.0</version>
+      </dependency>
       <!--  neo4j for ontology graph  -->
       <dependency>
          <groupId>org.neo4j</groupId>
