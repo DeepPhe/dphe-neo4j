@@ -21,7 +21,7 @@
       <dependency>
          <groupId>org.healthnlp</groupId>
          <artifactId>deepphe-core</artifactId>
-         <version>0.6.0</version>
+         <version>${deepphe.version}</version>
       </dependency>
       <!--  neo4j for ontology graph  -->
       <dependency>
