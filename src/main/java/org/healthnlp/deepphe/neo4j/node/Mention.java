@@ -38,11 +38,11 @@ public class Mention {
       this.classUri = classUri;
    }
 
-   private String getSemanticGroup() {
+   public String getSemanticGroup() {
       return semanticGroup;
    }
 
-   private void setSemanticGroup( final String semanticGroup ) {
+   public void setSemanticGroup( final String semanticGroup ) {
       this.semanticGroup = semanticGroup;
    }
 
