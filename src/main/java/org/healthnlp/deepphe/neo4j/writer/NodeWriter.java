@@ -678,10 +678,10 @@ public enum NodeWriter {
             node.setProperty( TEXT_SPAN_END, mention.getEnd() );
             node.setProperty( INSTANCE_NEGATED, mention.isNegated() );
             node.setProperty( INSTANCE_UNCERTAIN, mention.isUncertain() );
-            node.setProperty( INSTANCE_GENERIC, mention.isGeneric() );
-            node.setProperty( INSTANCE_CONDITIONAL, mention.isConditional() );
+//            node.setProperty( INSTANCE_GENERIC, mention.isGeneric() );
+//            node.setProperty( INSTANCE_CONDITIONAL, mention.isConditional() );
             node.setProperty( INSTANCE_HISTORIC, mention.isHistoric() );
-            node.setProperty( INSTANCE_TEMPORALITY, mention.getTemporality() );
+//            node.setProperty( INSTANCE_TEMPORALITY, mention.getTemporality() );
 
             if ( noteNode != null ) {
                 createRelation( graphDb, log, noteNode, node, NOTE_HAS_TEXT_MENTION_RELATION );

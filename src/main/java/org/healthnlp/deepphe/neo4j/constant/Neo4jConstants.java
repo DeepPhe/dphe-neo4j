@@ -19,9 +19,11 @@ final public class Neo4jConstants {
    static public final String PREF_TEXT_KEY = "preferred_text";
 
    static public final String CUI_KEY = "cui";
+   static public final String GROUPING_KEY = "grouping";
    static public final String TUI_KEY = "tui";
    static public final String ICDO_KEY = "icdo";
    static public final String LEVEL_KEY = "class_level";
+   static public final String NEOPLASTIC_STATUS_KEY = "neoplastic_status";
    static public final String HASH_KEY = "note_hash";
 
    static public final String MISSING_NODE_NAME = "MissingNodeName";
@@ -31,6 +33,8 @@ final public class Neo4jConstants {
    static public final String IS_A_PROP = "Is_A";
 
    static public final String DPHE_CODING_SCHEME = "DPHE_URI";
+   static public final String DPHE_VALUE_SCHEME = "DPHE_VALUE";
+
 //   static public final String DPHE_DOMAIN = "http://cancer.healthnlp.org/DeepPhe.owl";
 
 

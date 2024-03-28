@@ -30,6 +30,31 @@ final public class RelationConstants {
 //   static public final String DISEASE_HAS_M_STAGE = "Disease_Has_M_Stage";
 //   static public final String ANATOMIC_SITE_HAS_LATERALITY = "Anatomic_Site_Has_Laterality";
 
+   static public final String HAS_COMORBIDITY = "hasComorbidity";
+
+   static public final String HAS_SITE = "hasSite";
+   static public final String HAS_ASSOCIATED_SITE = "hasAssociatedSite";
+   static public final String HAS_METASTATIC_SITE = "hasMetastaticSite";
+   static public final String HAS_LYMPH_NODE = "hasLymphNode";
+
+   static public final String HAS_PROCEDURE = "hasProcedure";
+   static public final String HAS_FINDING = "hasFinding";
+   static public final String HAS_TISSUE = "hasTissue";
+   static public final String HAS_GENE = "hasGene";
+   static public final String HAS_STAGE_XN = "hasStage";
+   static public final String HAS_GRADE_XN = "hasGrade";
+   static public final String HAS_GLEASON_GRADE = "hasGleasonGrade";
+   static public final String HAS_CLINICAL_T_XN = "hasClinical_T";
+   static public final String HAS_CLINICAL_N_XN = "hasClinical_N";
+   static public final String HAS_CLINICAL_M_XN = "hasClinical_M";
+   static public final String HAS_PATHOLOGIC_T_XN = "hasPathologic_T";
+   static public final String HAS_PATHOLOGIC_N_XN = "hasPathologic_N";
+   static public final String HAS_PATHOLOGIC_M_XN = "hasPathologic_M";
+   static public final String IS_PART_OF_SITE = "isPartOfSite";
+   static public final String HAS_COURSE = "hasCourse";
+   static public final String HAS_MASS = "hasMass";
+   static public final String HAS_TEST_RESULT = "hasTestResult";
+
    static public final String HAS_LATERALITY = "hasLaterality";
    static public final String HAS_QUADRANT = "hasQuadrant";
    static public final String HAS_CLOCKFACE = "hasClockface";
@@ -326,8 +351,11 @@ final public class RelationConstants {
          Finding_Has_Associated_Cavity
    ) );
 
+   static private final Collection<String> NEW_SITE_RELATIONS
+         = new HashSet<>( Arrays.asList( HAS_SITE, HAS_ASSOCIATED_SITE, HAS_METASTATIC_SITE ) );
+
    static public boolean isHasSiteRelation( final String relationName ) {
-      return SITE_RELATIONS.contains( relationName );
+      return SITE_RELATIONS.contains( relationName ) || NEW_SITE_RELATIONS.contains( relationName );
    }
 
    static private final  Collection<String> LOCATION_RELATIONS

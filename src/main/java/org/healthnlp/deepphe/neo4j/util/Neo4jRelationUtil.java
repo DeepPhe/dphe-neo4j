@@ -1,10 +1,8 @@
 package org.healthnlp.deepphe.neo4j.util;
 
 
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
 import org.apache.log4j.Logger;
-import org.healthnlp.deepphe.neo4j.constant.RelationConstants;
+import org.healthnlp.deepphe.neo4j.constant.RelationConstants2;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.traversal.TraversalDescription;
 
@@ -20,7 +18,6 @@ import static org.healthnlp.deepphe.neo4j.constant.Neo4jConstants.NAME_KEY;
  */
 final public class Neo4jRelationUtil {
 
-//   static private final Logger LOGGER = LogManager.getLogger( "Neo4jRelationUtil" );
 static private final Logger LOGGER = Logger.getLogger( "Neo4jRelationUtil" );
 
    private Neo4jRelationUtil() {}
@@ -43,14 +40,12 @@ static private final Logger LOGGER = Logger.getLogger( "Neo4jRelationUtil" );
          final Map<String, Collection<String>> currentRelations = new HashMap<>();
          final TraversalDescription traverser = Neo4jTraverserFactory.getInstance()
                                                                      .getOrderedRootsTraverser( graphDb );
-         for ( Node node : traverser.traverse( rootBase )
-                                    .nodes() ) {
+         for ( Node node : traverser.traverse( rootBase ).nodes() ) {
             for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
-               final String relationName = relation.getType()
-                                                   .name();
-               if ( relationName.equals( IS_A_PROP ) || finalRelations.containsKey( relationName )
-                    || !RelationConstants.REQUIRED_RELATIONS.contains( relationName ) ) {
-                  // Added new "required relations" so that Dphe doesn't waste time trying to find relations that don't (yet) interest us.
+               final String relationName = relation.getType().name();
+               if ( relationName.equals( IS_A_PROP )
+                     || !RelationConstants2.isRequiredRelation( relationName )
+                     || finalRelations.containsKey( relationName )) {
                   continue;
                }
                final Collection<String> endUris = currentRelations.computeIfAbsent( relationName,
@@ -70,44 +65,132 @@ static private final Logger LOGGER = Logger.getLogger( "Neo4jRelationUtil" );
       return Collections.emptyMap();
    }
 
+//   /**
+//    *
+//    * @param uri -
+//    * @return all relations possible for the given uri class and its ancestors, stopping at the most specific related node for each relation type
+//    */
+//   static public Map<String, Collection<String>> getAllRelatedClassUris( final GraphDatabaseService graphDb,
+//                                                                      final String uri ) {
+//      try ( Transaction tx = graphDb.beginTx() ) {
+//         final Node rootBase = SearchUtil.getClassNode( graphDb, uri );
+//         if ( rootBase == null ) {
+//            LOGGER.error( "No Class exists for URI " + uri );
+//            tx.success();
+//            return Collections.emptyMap();
+//         }
+//         final Map<String, Collection<String>> relationTargets = new HashMap<>();
+//         final TraversalDescription traverser = Neo4jTraverserFactory.getInstance()
+//                                                                     .getOrderedRootsTraverser( graphDb );
+//         for ( Node node : traverser.traverse( rootBase )
+//                                    .nodes() ) {
+//            for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
+//               final String relationName = relation.getType()
+//                                                   .name();
+//               if ( relationName.equals( IS_A_PROP ) ) {
+//                  continue;
+//               }
+//               if ( !RelationConstants.REQUIRED_RELATIONS.contains( relationName )
+//                     && !RelationConstants2.REQUIRED_RELATIONS.contains( relationName ) ) {
+//                  continue;
+//               }
+//               final String target = relation.getOtherNode( node ).getProperty( NAME_KEY ).toString();
+//               relationTargets.computeIfAbsent( relationName, t -> new HashSet<>() ).add( target );
+//            }
+//         }
+//         tx.success();
+//         return relationTargets;
+//      } catch ( MultipleFoundException mfE ) {
+//         LOGGER.error( mfE.getMessage(), mfE );
+//      }
+//      return Collections.emptyMap();
+//   }
 
    /**
     *
     * @param uri -
     * @return all relations possible for the given uri class and its ancestors, stopping at the most specific related node for each relation type
     */
-   static public Map<String, Collection<Node>> getRelatedClassNodes( final GraphDatabaseService graphDb,
-                                                                     final String uri ) {
+   static public RelatedUris getAllRelatedClassUris( final GraphDatabaseService graphDb, final String uri ) {
       try ( Transaction tx = graphDb.beginTx() ) {
          final Node rootBase = SearchUtil.getClassNode( graphDb, uri );
          if ( rootBase == null ) {
             LOGGER.error( "No Class exists for URI " + uri );
             tx.success();
-            return Collections.emptyMap();
+            return RelatedUris.EMPTY_URIS;
          }
-         final Map<String, Collection<Node>> finalRelations = new HashMap<>();
-         final Map<String, Collection<Node>> currentRelations = new HashMap<>();
-         final TraversalDescription traverser = Neo4jTraverserFactory.getInstance().getOrderedRootsTraverser( graphDb );
-         for ( Node node : traverser.traverse( rootBase ).nodes() ) {
-            for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
+         // Map of relation Names to Targets for those relations.  e.g. hasSite(Arm,Hand), hasSite(BodyPart)
+         final Map<String,Collection<String>> relationTargets = new HashMap<>();
+         // Map of relation target owners to their distance from the original class of interest.
+         // e.g. CancerOfTheArm(1), neoplasm(3) if the original uri was CancerOfTheRightArm
+         final Map<String,Integer> targetOwnerDistance = new HashMap<>();
+         final TraversalDescription traverser = Neo4jTraverserFactory.getInstance()
+                                                                     .getOrderedRootsTraverser( graphDb );
+         for ( Path path : traverser.traverse( rootBase ) ) {
+            final Node relationOwnerNode = path.endNode();
+            for ( Relationship relation : relationOwnerNode.getRelationships( Direction.OUTGOING ) ) {
                final String relationName = relation.getType().name();
-               if ( finalRelations.containsKey( relationName ) ) {
+               if ( relationName.equals( IS_A_PROP ) || !RelationConstants2.isRequiredRelation( relationName ) ) {
                   continue;
                }
-               final Collection<Node> endNodes = currentRelations.computeIfAbsent( relationName,
-                                                                                   n -> new ArrayList<>() );
-               endNodes.add( relation.getOtherNode( node ) );
+               final String relationTarget = relation.getOtherNode( relationOwnerNode ).getProperty( NAME_KEY ).toString();
+               final boolean added = relationTargets.computeIfAbsent( relationName, t -> new HashSet<>() ).add( relationTarget );
+               final int ownerDistance = path.length();
+               if ( added ) {
+                  targetOwnerDistance.put( relationTarget, ownerDistance );
+               } else {
+                  final int otherDistance = targetOwnerDistance.get( relationTarget );
+                  if ( ownerDistance < otherDistance ) {
+                     targetOwnerDistance.put( relationTarget, ownerDistance );
+                  }
+               }
             }
-            finalRelations.putAll( currentRelations );
-            currentRelations.clear();
          }
          tx.success();
-         return finalRelations;
+         return new RelatedUris( relationTargets, targetOwnerDistance );
       } catch ( MultipleFoundException mfE ) {
          LOGGER.error( mfE.getMessage(), mfE );
       }
-      return Collections.emptyMap();
+      return RelatedUris.EMPTY_URIS;
    }
+
+//   /**
+//    *
+//    * @param uri -
+//    * @return all relations possible for the given uri class and its ancestors, stopping at the most specific related node for each relation type
+//    */
+//   static public Map<String, Collection<Node>> getRelatedClassNodes( final GraphDatabaseService graphDb,
+//                                                                     final String uri ) {
+//      try ( Transaction tx = graphDb.beginTx() ) {
+//         final Node rootBase = SearchUtil.getClassNode( graphDb, uri );
+//         if ( rootBase == null ) {
+//            LOGGER.error( "No Class exists for URI " + uri );
+//            tx.success();
+//            return Collections.emptyMap();
+//         }
+//         final Map<String, Collection<Node>> finalRelations = new HashMap<>();
+//         final Map<String, Collection<Node>> currentRelations = new HashMap<>();
+//         final TraversalDescription traverser = Neo4jTraverserFactory.getInstance().getOrderedRootsTraverser( graphDb );
+//         for ( Node node : traverser.traverse( rootBase ).nodes() ) {
+//            for ( Relationship relation : node.getRelationships( Direction.OUTGOING ) ) {
+//               final String relationName = relation.getType().name();
+//               if ( finalRelations.containsKey( relationName ) ) {
+//                  continue;
+//               }
+//               final Collection<Node> endNodes = currentRelations.computeIfAbsent( relationName,
+//                                                                                   n -> new ArrayList<>() );
+//               endNodes.add( relation.getOtherNode( node ) );
+//            }
+//            finalRelations.putAll( currentRelations );
+//            currentRelations.clear();
+//         }
+//         tx.success();
+//         return finalRelations;
+//      } catch ( MultipleFoundException mfE ) {
+//         LOGGER.error( mfE.getMessage(), mfE );
+//      }
+//      return Collections.emptyMap();
+//   }
 
 
 //   static public Collection<String> getRelatableUris( final GraphDatabaseService graphDb,
@@ -125,21 +208,21 @@ static private final Logger LOGGER = Logger.getLogger( "Neo4jRelationUtil" );
 //      return targetUris;
 //   }
 
-   static public Collection<String> getRelatableUris( final GraphDatabaseService graphDb,
-                                                      final Collection<String> availableUris,
-                                                      final Collection<String> relationTargetUris ) {
-      final Collection<String> targetUris = new HashSet<>();
-      for ( String relationTargetUri : relationTargetUris ) {
-         if ( targetUris.contains( relationTargetUri ) ) {
-            // the relation target uri and its branch nodes are already in the collection of branch nodes.
-            continue;
-         }
-         final Collection<String> targetableBranch = SearchUtil.getBranchUris( graphDb, relationTargetUri );
-         targetUris.addAll( targetableBranch );
-      }
-      targetUris.retainAll( availableUris );
-      return targetUris;
-   }
+//   static public Collection<String> getRelatableUris( final GraphDatabaseService graphDb,
+//                                                      final Collection<String> availableUris,
+//                                                      final Collection<String> relationTargetUris ) {
+//      final Collection<String> targetUris = new HashSet<>();
+//      for ( String relationTargetUri : relationTargetUris ) {
+//         if ( targetUris.contains( relationTargetUri ) ) {
+//            // the relation target uri and its branch nodes are already in the collection of branch nodes.
+//            continue;
+//         }
+//         final Collection<String> targetableBranch = SearchUtil.getBranchUris( graphDb, relationTargetUri );
+//         targetUris.addAll( targetableBranch );
+//      }
+//      targetUris.retainAll( availableUris );
+//      return targetUris;
+//   }
 
 
 }

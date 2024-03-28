@@ -25,6 +25,9 @@ import static org.healthnlp.deepphe.neo4j.util.DataUtil.safeGetProperty;
 public enum NodeReader {
     INSTANCE;
 
+    // TODO - Refactor
+
+
     @SuppressWarnings("SameReturnValue")
     static public NodeReader getInstance() {
         return INSTANCE;
@@ -638,20 +641,22 @@ public enum NodeReader {
             final Mention mention = new Mention();
             mention.setId(DataUtil.objectToString(mentionNode.getProperty(NAME_KEY)));
             mention.setClassUri(DataUtil.getUri(graphDb, mentionNode));
-            for (Relationship relation : mentionNode.getRelationships(Direction.INCOMING,
-                    NOTE_HAS_TEXT_MENTION_RELATION)) {
-                final Node noteNode = relation.getOtherNode(mentionNode);
-                mention.setNoteId(DataUtil.objectToString(noteNode.getProperty(NAME_KEY)));
-                mention.setNoteType(DataUtil.objectToString(noteNode.getProperty(NOTE_TYPE)));
-            }
-            mention.setBegin(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_BEGIN)));
-            mention.setEnd(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_END)));
+//            for (Relationship relation : mentionNode.getRelationships(Direction.INCOMING,
+//                    NOTE_HAS_TEXT_MENTION_RELATION)) {
+//                final Node noteNode = relation.getOtherNode(mentionNode);
+//                mention.setNoteId(DataUtil.objectToString(noteNode.getProperty(NAME_KEY)));
+//                mention.setNoteType(DataUtil.objectToString(noteNode.getProperty(NOTE_TYPE)));
+//            }
+//            mention.setBegin(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_BEGIN)));
+//            mention.setEnd(DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_END)));
+            mention.setSpan( DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_BEGIN)),
+                  DataUtil.objectToInt(mentionNode.getProperty(TEXT_SPAN_END)) );
             mention.setNegated(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_NEGATED)));
             mention.setUncertain(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_UNCERTAIN)));
-            mention.setGeneric(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_GENERIC)));
-            mention.setConditional(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_CONDITIONAL)));
+//            mention.setGeneric(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_GENERIC)));
+//            mention.setConditional(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_CONDITIONAL)));
             mention.setHistoric(DataUtil.objectToBoolean(mentionNode.getProperty(INSTANCE_HISTORIC)));
-            mention.setTemporality(DataUtil.objectToString(mentionNode.getProperty(INSTANCE_TEMPORALITY)));
+//            mention.setTemporality(DataUtil.objectToString(mentionNode.getProperty(INSTANCE_TEMPORALITY)));
             tx.success();
             return mention;
         } catch (TransactionFailureException txE) {
@@ -1055,56 +1060,56 @@ public enum NodeReader {
     }
 
 
-    private void populateTextProvenancesAndMentionedTerms(List<NeoplasmSummary> cancers,
-                                                          String factId,
-                                                          FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
-                                                          List<NewMentionedTerm> mentionedTerms) {
-        for (NeoplasmSummary cancer : Objects.requireNonNull(cancers)) {
-            populateTextProvenancesAndMentionedTermsFromAttributes(cancer.getAttributes(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
-            populateTextProvenancesAndMentionedTermsFromSubSummaries(cancer.getSubSummaries(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
-        }
-    }
+//    private void populateTextProvenancesAndMentionedTerms(List<NeoplasmSummary> cancers,
+//                                                          String factId,
+//                                                          FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
+//                                                          List<NewMentionedTerm> mentionedTerms) {
+//        for (NeoplasmSummary cancer : Objects.requireNonNull(cancers)) {
+//            populateTextProvenancesAndMentionedTermsFromAttributes(cancer.getAttributes(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
+//            populateTextProvenancesAndMentionedTermsFromSubSummaries(cancer.getSubSummaries(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
+//        }
+//    }
 
 
-    private void populateTextProvenancesAndMentionedTermsFromAttributes(List<NeoplasmAttribute> facts,
-                                                                        String factId,
-                                                                        FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
-                                                                        List<NewMentionedTerm> mentionedTerms) {
-        for (NeoplasmAttribute fact : facts) {
-            if (fact.getId().equalsIgnoreCase(factId)) {
-                //use direct evidence to build the "mention" data structure
-                NewFactInfo factInfo = new NewFactInfo();
-                factInfo.setName(fact.getName());
-                factInfo.setId(fact.getId());
-                factInfo.setValue(fact.getValue());
-                factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
-                factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
-                for (Mention mention : fact.getDirectEvidence()) {
-                    NewMentionedTerm mentionedTerm = new NewMentionedTerm();
-                    mentionedTerm.setTerm(mention.getClassUri());
-                    mentionedTerm.setReportId(mention.getNoteId());
-                    mentionedTerm.setReportType(mention.getNoteType());
-                    mentionedTerm.setReportName(mention.getNoteId());
-                    mentionedTerm.setBegin(mention.getBegin());
-                    mentionedTerm.setEnd(mention.getEnd());
-                    mentionedTerms.add(mentionedTerm);
-                }
-            }
-        }
-    }
+//    private void populateTextProvenancesAndMentionedTermsFromAttributes(List<NeoplasmAttribute> facts,
+//                                                                        String factId,
+//                                                                        FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
+//                                                                        List<NewMentionedTerm> mentionedTerms) {
+//        for (NeoplasmAttribute fact : facts) {
+//            if (fact.getId().equalsIgnoreCase(factId)) {
+//                //use direct evidence to build the "mention" data structure
+//                NewFactInfo factInfo = new NewFactInfo();
+//                factInfo.setName(fact.getName());
+//                factInfo.setId(fact.getId());
+//                factInfo.setValue(fact.getValue());
+//                factInfo.setPrettyName(DataUtil.getRelationPrettyName(fact.getClassUri()));
+//                factInfoAndGroupedTextProvenances.setSourceFact(factInfo);
+//                for (Mention mention : fact.getDirectEvidence()) {
+//                    NewMentionedTerm mentionedTerm = new NewMentionedTerm();
+//                    mentionedTerm.setTerm(mention.getClassUri());
+//                    mentionedTerm.setReportId(mention.getNoteId());
+//                    mentionedTerm.setReportType(mention.getNoteType());
+//                    mentionedTerm.setReportName(mention.getNoteId());
+//                    mentionedTerm.setBegin(mention.getBegin());
+//                    mentionedTerm.setEnd(mention.getEnd());
+//                    mentionedTerms.add(mentionedTerm);
+//                }
+//            }
+//        }
+//    }
 
-    private void populateTextProvenancesAndMentionedTermsFromSubSummaries(List<NeoplasmSummary> subSummaries,
-                                                                          String factId,
-                                                                          FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
-                                                                          List<NewMentionedTerm> mentionedTerms) {
-        if (subSummaries != null) {
-            for (NeoplasmSummary summary : Objects.requireNonNull(subSummaries)) {
-                populateTextProvenancesAndMentionedTermsFromAttributes(summary.getAttributes(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
-                //recursive call because subSummaries can have subSummaries
-                populateTextProvenancesAndMentionedTermsFromSubSummaries(summary.getSubSummaries(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
-            }
-        }
-    }
+//    private void populateTextProvenancesAndMentionedTermsFromSubSummaries(List<NeoplasmSummary> subSummaries,
+//                                                                          String factId,
+//                                                                          FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances,
+//                                                                          List<NewMentionedTerm> mentionedTerms) {
+//        if (subSummaries != null) {
+//            for (NeoplasmSummary summary : Objects.requireNonNull(subSummaries)) {
+//                populateTextProvenancesAndMentionedTermsFromAttributes(summary.getAttributes(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
+//                //recursive call because subSummaries can have subSummaries
+//                populateTextProvenancesAndMentionedTermsFromSubSummaries(summary.getSubSummaries(), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
+//            }
+//        }
+//    }
 
     // TODO - Create a bean in dphe-neo4j...node package that contains "Fact" summary information.
     // TODO - There is a node there  ... "Concept" or something.
@@ -1118,7 +1123,7 @@ public enum NodeReader {
         FactInfoAndGroupedTextProvenances factInfoAndGroupedTextProvenances = new FactInfoAndGroupedTextProvenances();
         List<NewMentionedTerm> mentionedTerms = new ArrayList<>();
         factInfoAndGroupedTextProvenances.setMentionedTerms(mentionedTerms);
-        populateTextProvenancesAndMentionedTerms(getCancers(graphDb, log, patientId), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
+//        populateTextProvenancesAndMentionedTerms(getCancers(graphDb, log, patientId), factId, factInfoAndGroupedTextProvenances, mentionedTerms);
         return factInfoAndGroupedTextProvenances;
     }
 

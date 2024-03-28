@@ -51,6 +51,8 @@ final public class UriConstants {
    static public final String TISSUE = "Tissue";
 
    static public final String BODY_FLUID = "Body_Fluid";
+   static public final String BODY_FLUID_XN = "BodyFluidOrSubstance";
+
    static public final String BODY_MISC = "Body_Miscellaneous";
    static private final String CELL = "Entire_Cell";
 
@@ -60,6 +62,7 @@ final public class UriConstants {
    //
 
    static public final String DISEASE = "Disease";
+   static public final String DISEASE_XN = "DiseaseOrDisorder";
 
    static public final String NEOPLASM = "Neoplasm";
    // Neoplasm should have everything we want re tumor, cancer.  Neo disease is diseases (named) that have neoplasms.
@@ -94,7 +97,8 @@ final public class UriConstants {
 
    static public final String BIOMARKER = "Tumor_Biomarkers";
 
-   //nMaybe migrate to Lab Result
+   static public final String TEST_RESULT = "ClinicalTestResult";
+   //Maybe migrate to Lab Result
    static public final String RECEPTOR_STATUS = "Receptor_Status";
    static public final String ER_STATUS = "Estrogen_Receptor_Status";
    // #Estrogen_Receptor_Positive , _Negative, _Status_Unknown
@@ -106,6 +110,7 @@ final public class UriConstants {
 
    // Maybe migrate to qualitative entity
    static public final String LATERALITY = "Laterality";
+   static public final String LATERALITY_XN = "Side";
 
    //          FINDING        Body Substance
 
@@ -123,6 +128,7 @@ final public class UriConstants {
    //
 
    static public final String MEDICATION = "Pharmacologic_Substance";
+   static public final String MEDICATION_XN = "PharmacologicSubstance";
 
 
    //
@@ -131,7 +137,9 @@ final public class UriConstants {
 
    static public final String DIAGNOSTIC_TEST = "Diagnostic_Procedure";
    static public final String PROCEDURE = "Interventional_Procedure";
+   static public final String PROCEDURE_XN = "InterventionOrProcedure";
    static public final String CHEMOTHERAPY_REGIMEN = "Chemotherapy_Regimen";
+   static public final String REGIMEN_XN = "Chemo_sl_immuno_sl_hormoneTherapyRegimen";
    static public final String AGENT_COMBINATION = "Agent_Combination";
 
 
@@ -272,19 +280,19 @@ final public class UriConstants {
 //   static public final String LATERALITY = DPHE_ROOT_HASH + "Laterality";
 
 
-   static private final Collection<String> MASS_URIS = new HashSet<>();
-
-   static public Collection<String> getMassUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return MASS_URIS;
-   }
-
-   static private final Collection<String> CANCER_URIS = new HashSet<>();
-
-   static public Collection<String> getCancerUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return CANCER_URIS;
-   }
+//   static private final Collection<String> MASS_URIS = new HashSet<>();
+//
+//   static public Collection<String> getMassUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return MASS_URIS;
+//   }
+//
+//   static private final Collection<String> CANCER_URIS = new HashSet<>();
+//
+//   static public Collection<String> getCancerUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return CANCER_URIS;
+//   }
 
    static private final Collection<String> MASS_NEOPLASMS = new HashSet<>();
 
@@ -293,11 +301,11 @@ final public class UriConstants {
 //      return MASS_NEOPLASMS;
 //   }
 
-   static private final Collection<String> PRIMARY_URIS = new HashSet<>();
-   static public Collection<String> getPrimaryUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return PRIMARY_URIS;
-   }
+//   static private final Collection<String> PRIMARY_URIS = new HashSet<>();
+//   static public Collection<String> getPrimaryUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return PRIMARY_URIS;
+//   }
 
    static private final Collection<String> UNKOWN_PRIMARY_URIS = new HashSet<>();
 //   static public Collection<String> getUnknownPrimaryUris( final GraphDatabaseService graphDb ) {
@@ -312,18 +320,18 @@ final public class UriConstants {
 //   }
 
 
-   static private final Collection<String> METASTASIS_URIS = new HashSet<>();
-
-   static public Collection<String> getMetastasisUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return METASTASIS_URIS;
-   }
-
-   static private final Collection<String> BENIGN_URIS = new HashSet<>();
-   static public Collection<String> getBenignTumorUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return BENIGN_URIS;
-   }
+//   static private final Collection<String> METASTASIS_URIS = new HashSet<>();
+//
+//   static public Collection<String> getMetastasisUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return METASTASIS_URIS;
+//   }
+//
+//   static private final Collection<String> BENIGN_URIS = new HashSet<>();
+//   static public Collection<String> getBenignTumorUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return BENIGN_URIS;
+//   }
 
    static private final Collection<String> GENERIC_URIS = new HashSet<>();
 
@@ -332,60 +340,60 @@ final public class UriConstants {
 //      return GENERIC_URIS;
 //   }
 
-   static private final Collection<String> LOCATION_URIS = new HashSet<>();
+//   static private final Collection<String> LOCATION_URIS = new HashSet<>();
+//
+//   static public Collection<String> getLocationUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return LOCATION_URIS;
+//   }
 
-   static public Collection<String> getLocationUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return LOCATION_URIS;
-   }
+//   static private final Collection<String> POSITIVE_VALUE_URIS = new HashSet<>();
+//
+//   static public Collection<String> getPositiveValueUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return POSITIVE_VALUE_URIS;
+//   }
 
-   static private final Collection<String> POSITIVE_VALUE_URIS = new HashSet<>();
+//   static private final Collection<String> REGULAR_VALUE_URIS = new HashSet<>();
+//
+//   static public Collection<String> getRegaultValueUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return REGULAR_VALUE_URIS;
+//   }
 
-   static public Collection<String> getPositiveValueUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return POSITIVE_VALUE_URIS;
-   }
+//   static private final Collection<String> NORMAL_VALUE_URIS = new HashSet<>();
+//
+//   static public Collection<String> getNormalValueUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return NORMAL_VALUE_URIS;
+//   }
 
-   static private final Collection<String> REGULAR_VALUE_URIS = new HashSet<>();
+//   static private final Collection<String> STABLE_VALUE_URIS = new HashSet<>();
+//
+//   static public Collection<String> getStableValueUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return STABLE_VALUE_URIS;
+//   }
 
-   static public Collection<String> getRegaultValueUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return REGULAR_VALUE_URIS;
-   }
+//   static private final Collection<String> HIGH_VALUE_URIS = new HashSet<>();
+//
+//   static public Collection<String> getHighValueUris( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return HIGH_VALUE_URIS;
+//   }
 
-   static private final Collection<String> NORMAL_VALUE_URIS = new HashSet<>();
+//   static private final Map<String, Collection<String>> HISTOLOGY_MAP = new HashMap<>();
+//
+//   static public Map<String, Collection<String>> getHistologyMap( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return HISTOLOGY_MAP;
+//   }
 
-   static public Collection<String> getNormalValueUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return NORMAL_VALUE_URIS;
-   }
-
-   static private final Collection<String> STABLE_VALUE_URIS = new HashSet<>();
-
-   static public Collection<String> getStableValueUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return STABLE_VALUE_URIS;
-   }
-
-   static private final Collection<String> HIGH_VALUE_URIS = new HashSet<>();
-
-   static public Collection<String> getHighValueUris( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return HIGH_VALUE_URIS;
-   }
-
-   static private final Map<String, Collection<String>> HISTOLOGY_MAP = new HashMap<>();
-
-   static public Map<String, Collection<String>> getHistologyMap( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return HISTOLOGY_MAP;
-   }
-
-   static private final Map<String, Collection<String>> CANCER_TYPE_MAP = new HashMap<>();
-   static public Map<String, Collection<String>> getCancerTypeMap( final GraphDatabaseService graphDb ) {
-      initializeUris( graphDb );
-      return CANCER_TYPE_MAP;
-   }
+//   static private final Map<String, Collection<String>> CANCER_TYPE_MAP = new HashMap<>();
+//   static public Map<String, Collection<String>> getCancerTypeMap( final GraphDatabaseService graphDb ) {
+//      initializeUris( graphDb );
+//      return CANCER_TYPE_MAP;
+//   }
 
    static private final Map<String, String> DIAGNOSIS_GROUP_NAMES = new HashMap<>();
    static public Map<String, String> getDiagnosisGroupNames( final GraphDatabaseService graphDb ) {
@@ -393,14 +401,14 @@ final public class UriConstants {
       return DIAGNOSIS_GROUP_NAMES;
    }
 
-   static public String getDiagnosisGroupName( final GraphDatabaseService graphDb, final String uri ) {
-      final Map<String, String> map = getDiagnosisGroupNames( graphDb );
-      final String category = map.get( uri );
-      if ( category != null && !category.isEmpty() ) {
-         return category;
-      }
-      return "Unknown";
-   }
+//   static public String getDiagnosisGroupName( final GraphDatabaseService graphDb, final String uri ) {
+//      final Map<String, String> map = getDiagnosisGroupNames( graphDb );
+//      final String category = map.get( uri );
+//      if ( category != null && !category.isEmpty() ) {
+//         return category;
+//      }
+//      return "Unknown";
+//   }
 
 
    static private final Collection<String> CANCER_STAGES = new ArrayList<>();
@@ -422,68 +430,68 @@ final public class UriConstants {
 
    static private void initializeUris( final GraphDatabaseService graphDb ) {
       synchronized ( URI_LOCK ) {
-         if ( MASS_URIS.isEmpty() ) {
+//         if ( MASS_URIS.isEmpty() ) {
+//
+//            CANCER_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
+//            MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
+//            // A lot of cancers are branched from mass.  We want to keep those as cancers.
+//            final Collection<String> malignancyUris = SearchUtil.getBranchUris( graphDb, "Malignant_Neoplasm" );
+//            MASS_URIS.removeAll( malignancyUris );
+//            // Collect individual (not branch) uris under cancer that are called "Tumor" and "Mass".
+//            final Collection<String> namedTumorUris
+//                  = CANCER_URIS.stream()
+//                               .filter( u -> !u.contains( "Malignant" )
+//                                             && !u.contains( "adeno" )
+//                                             && !u.contains( "Carc" ) )
+//                               .filter( u -> u.contains( "Tumor" )
+//                                             || u.contains( "Mass" )
+//                                             || u.contains( "Cyst" ) )
+//                               .collect( Collectors.toSet() );
+//            MASS_URIS.addAll( namedTumorUris );
+//            // Get rid of neoplastic cell.
+//            final Collection<String> neoplasticCell = SearchUtil.getBranchUris( graphDb, "Neoplastic_Cell" );
+//            MASS_URIS.removeAll( neoplasticCell );
+//            CANCER_URIS.removeAll( neoplasticCell );
+//            // Here is another trick:  The root node NEOPLASM should also be considered a mass.
+//            MASS_URIS.add( NEOPLASM );
+//            // We don't want mentions of metastasis to be seen as [primary] cancers.
+//            MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Metastasis" ) );
+//            // Separate Mass from Cancer
+//            CANCER_URIS.removeAll( MASS_URIS );
+//
+//            MASS_NEOPLASMS.addAll( MASS_URIS );
+//            MASS_NEOPLASMS.addAll( CANCER_URIS );
 
-            CANCER_URIS.addAll( SearchUtil.getBranchUris( graphDb, NEOPLASM ) );
-            MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, MASS ) );
-            // A lot of cancers are branched from mass.  We want to keep those as cancers.
-            final Collection<String> malignancyUris = SearchUtil.getBranchUris( graphDb, "Malignant_Neoplasm" );
-            MASS_URIS.removeAll( malignancyUris );
-            // Collect individual (not branch) uris under cancer that are called "Tumor" and "Mass".
-            final Collection<String> namedTumorUris
-                  = CANCER_URIS.stream()
-                               .filter( u -> !u.contains( "Malignant" )
-                                             && !u.contains( "adeno" )
-                                             && !u.contains( "Carc" ) )
-                               .filter( u -> u.contains( "Tumor" )
-                                             || u.contains( "Mass" )
-                                             || u.contains( "Cyst" ) )
-                               .collect( Collectors.toSet() );
-            MASS_URIS.addAll( namedTumorUris );
-            // Get rid of neoplastic cell.
-            final Collection<String> neoplasticCell = SearchUtil.getBranchUris( graphDb, "Neoplastic_Cell" );
-            MASS_URIS.removeAll( neoplasticCell );
-            CANCER_URIS.removeAll( neoplasticCell );
-            // Here is another trick:  The root node NEOPLASM should also be considered a mass.
-            MASS_URIS.add( NEOPLASM );
-            // We don't want mentions of metastasis to be seen as [primary] cancers.
-            MASS_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Metastasis" ) );
-            // Separate Mass from Cancer
-            CANCER_URIS.removeAll( MASS_URIS );
-
-            MASS_NEOPLASMS.addAll( MASS_URIS );
-            MASS_NEOPLASMS.addAll( CANCER_URIS );
-
-            MALIGNANT_URIS.addAll( SearchUtil.getBranchUris( graphDb, MALIGNANT_NEOPLASM ) );
-            BENIGN_URIS.addAll( SearchUtil.getBranchUris( graphDb, BENIGN_NEOPLASM ) );
-            PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, PRIMARY_NEOPLASM ) );
-            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Primary_Lesion" ) );
-            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Primary_Lesion" ) );
-
-            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTATIC_NEOPLASM ) );
+//            MALIGNANT_URIS.addAll( SearchUtil.getBranchUris( graphDb, MALIGNANT_NEOPLASM ) );
+//            BENIGN_URIS.addAll( SearchUtil.getBranchUris( graphDb, BENIGN_NEOPLASM ) );
+//            PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, PRIMARY_NEOPLASM ) );
+//            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Primary_Lesion" ) );
+//            PRIMARY_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Primary_Lesion" ) );
+//
+//            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTATIC_NEOPLASM ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUris( graphDb, METASTASIS ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Secondary_Lesion" ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, MASS, "Disease_Has_Finding", "Metastatic_Lesion" ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Secondary_Lesion" ) );
 //            METASTASIS_URIS.addAll( SearchUtil.getBranchUrisWithRelation( graphDb, NEOPLASM, "Disease_Has_Finding", "Metastatic_Lesion" ) );
-            PRIMARY_URIS.removeAll( METASTASIS_URIS );
-
-            GENERIC_URIS.addAll( CANCER_URIS );
-            GENERIC_URIS.removeAll( MALIGNANT_URIS );
-            GENERIC_URIS.removeAll( BENIGN_URIS );
-            GENERIC_URIS.removeAll( PRIMARY_URIS );
-            GENERIC_URIS.removeAll( METASTASIS_URIS );
-
-            UNKOWN_PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Neoplasms__Unknown_Primary" ) );
-
-            CANCER_TYPE_MAP.put( "Carcinoma", SearchUtil.getBranchUris( graphDb, "Carcinoma" ) );
-            CANCER_TYPE_MAP.put( "Sarcoma", SearchUtil.getBranchUris( graphDb, "Sarcoma" ) );
-            CANCER_TYPE_MAP
-                  .put( "Plasma_Cell_Myeloma", SearchUtil.getBranchUris( graphDb, "Plasma_Cell_Myeloma" ) );
-            CANCER_TYPE_MAP
-                  .put( "Melanoma", SearchUtil.getBranchUris( graphDb, "Melanocytic_Neoplasm" ) );
-            CANCER_TYPE_MAP.put( "Leukemia", SearchUtil.getBranchUris( graphDb, "Leukemia" ) );
-            CANCER_TYPE_MAP.put( "Lymphoma", SearchUtil.getBranchUris( graphDb, "Lymphoma" ) );
+//            PRIMARY_URIS.removeAll( METASTASIS_URIS );
+//
+//            GENERIC_URIS.addAll( CANCER_URIS );
+//            GENERIC_URIS.removeAll( MALIGNANT_URIS );
+//            GENERIC_URIS.removeAll( BENIGN_URIS );
+//            GENERIC_URIS.removeAll( PRIMARY_URIS );
+//            GENERIC_URIS.removeAll( METASTASIS_URIS );
+//
+//            UNKOWN_PRIMARY_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Neoplasms__Unknown_Primary" ) );
+//
+//            CANCER_TYPE_MAP.put( "Carcinoma", SearchUtil.getBranchUris( graphDb, "Carcinoma" ) );
+//            CANCER_TYPE_MAP.put( "Sarcoma", SearchUtil.getBranchUris( graphDb, "Sarcoma" ) );
+//            CANCER_TYPE_MAP
+//                  .put( "Plasma_Cell_Myeloma", SearchUtil.getBranchUris( graphDb, "Plasma_Cell_Myeloma" ) );
+//            CANCER_TYPE_MAP
+//                  .put( "Melanoma", SearchUtil.getBranchUris( graphDb, "Melanocytic_Neoplasm" ) );
+//            CANCER_TYPE_MAP.put( "Leukemia", SearchUtil.getBranchUris( graphDb, "Leukemia" ) );
+//            CANCER_TYPE_MAP.put( "Lymphoma", SearchUtil.getBranchUris( graphDb, "Lymphoma" ) );
 
             // 3/30/2023 completely ignoring these histology uris.
             // 9 "Histologic Types" are new to ontology
@@ -524,109 +532,109 @@ final public class UriConstants {
 //            HISTOLOGY_MAP.put( "Yolk_Sac", SearchUtil.getBranchUris( graphDb, "Yolk_Sac_Tumor" ) );
 
 //            DIAGNOSIS_GROUP_NAMES
-            final Collection<String> sites = getChildren( graphDb, "Neoplasm_by_Site" );
-            final Collection<String> morphs = getChildren( graphDb,"Neoplasm_by_Morphology" );
-            final Collection<String> masses = getChildren( graphDb, MASS );
+//            final Collection<String> sites = getChildren( graphDb, "Neoplasm_by_Site" );
+//            final Collection<String> morphs = getChildren( graphDb,"Neoplasm_by_Morphology" );
+//            final Collection<String> masses = getChildren( graphDb, MASS );
 
-            for ( String mass : masses ) {
-               final String groupText = SearchUtil.getPreferredText( graphDb, mass );
-               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, mass );
-               for ( String node : branch ) {
-                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
-                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
-               }
-               DIAGNOSIS_GROUP_NAMES.put( MASS, MASS );
-            }
-            for ( String morph : morphs ) {
-               final String groupText = SearchUtil.getPreferredText( graphDb, morph );
-               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, morph );
-               for ( String node : branch ) {
-                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
-                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
-               }
-            }
-            for ( String site : sites ) {
-               final String groupText = SearchUtil.getPreferredText( graphDb, site );
-               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, site );
-               for ( String node : branch ) {
-                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
-                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
-               }
-            }
+//            for ( String mass : masses ) {
+//               final String groupText = SearchUtil.getPreferredText( graphDb, mass );
+//               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, mass );
+//               for ( String node : branch ) {
+//                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
+//                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
+//               }
+//               DIAGNOSIS_GROUP_NAMES.put( MASS, MASS );
+//            }
+//            for ( String morph : morphs ) {
+//               final String groupText = SearchUtil.getPreferredText( graphDb, morph );
+//               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, morph );
+//               for ( String node : branch ) {
+//                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
+//                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
+//               }
+//            }
+//            for ( String site : sites ) {
+//               final String groupText = SearchUtil.getPreferredText( graphDb, site );
+//               final Collection<String> branch = SearchUtil.getBranchUris( graphDb, site );
+//               for ( String node : branch ) {
+//                  final String prefText = SearchUtil.getPreferredText( graphDb, node );
+//                  DIAGNOSIS_GROUP_NAMES.put( prefText, groupText );
+//               }
+//            }
 
-            SearchUtil.getBranchUris( graphDb, STAGE ).stream()
-                      .filter( u -> u.length() < 12 )
-                      .forEach( CANCER_STAGES::add );
-
-            SearchUtil.getBranchUris( graphDb, GRADE ).stream()
+//            SearchUtil.getBranchUris( graphDb, STAGE ).stream()
 //                      .filter( u -> u.length() < 12 )
-                      .filter( u -> u.length() < 26 )
-                      .forEach( CANCER_GRADES::add );
+//                      .forEach( CANCER_STAGES::add );
+//
+//            SearchUtil.getBranchUris( graphDb, GRADE ).stream()
+////                      .filter( u -> u.length() < 12 )
+//                      .filter( u -> u.length() < 26 )
+//                      .forEach( CANCER_GRADES::add );
 
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, BODY_REGION ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, BODY_CAVITY ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN_SYSTEM ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ANATOMICAL_SET ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN_PART ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ACQUIRED_BODY_STRUCTURE ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ANATOMY_GROUP ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, VARIANT_ANATOMY ) );
-            // Skin part is where exocrine gland is removed so remove it first.
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
-            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_TISSUE ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, TISSUE ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Anatomic_Border" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Wall_Of_Colon" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Reticuloendothelial_Cell" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Cell" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Marrow" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
-            // Broad and Round Ligament are part of Genitalia and wanted for C57
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Broad_Ligament" ) );
-            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Round_Ligament" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cartilage" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Muscle" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Mucous_Membrane" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Serous_Membrane" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Synovial_Bursa" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Lymphatic_Vessel" ) );
-            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
-            final Collection<String> locationRemovals = LOCATION_URIS.stream()
-                                                                     .filter( u -> u.toLowerCase().contains( "tissue" ) )
-                                                                     .collect( Collectors.toSet() );
-            LOCATION_URIS.removeAll( locationRemovals );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, BODY_REGION ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, BODY_CAVITY ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN_SYSTEM ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ANATOMICAL_SET ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ORGAN_PART ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ACQUIRED_BODY_STRUCTURE ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, ANATOMY_GROUP ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, VARIANT_ANATOMY ) );
+//            // Skin part is where exocrine gland is removed so remove it first.
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Skin_Part" ) );
+//            // Some Glands (e.g. prostate) are exocrine, under cutaneous, under skin part.  Not quite right.
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Exocrine_Gland" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_TISSUE ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, TISSUE ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_FLUID ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, BODY_MISC ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, CELL ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Anatomic_Border" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Wall_Of_Colon" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Reticuloendothelial_Cell" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Cell" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Bone_Marrow" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Aponeurosis" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cranial_Epidural_Space" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Ligament" ) );
+//            // Broad and Round Ligament are part of Genitalia and wanted for C57
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Broad_Ligament" ) );
+//            LOCATION_URIS.addAll( SearchUtil.getBranchUris( graphDb, "Round_Ligament" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Cartilage" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Muscle" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Mucous_Membrane" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Serous_Membrane" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Synovial_Bursa" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Labyrinth_Supporting_Cells" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, LYMPH_NODE ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Lymphatic_Vessel" ) );
+//            LOCATION_URIS.removeAll( SearchUtil.getBranchUris( graphDb, "Occipital_Segment_Of_Fusiform_Gyrus" ) );
+//            final Collection<String> locationRemovals = LOCATION_URIS.stream()
+//                                                                     .filter( u -> u.toLowerCase().contains( "tissue" ) )
+//                                                                     .collect( Collectors.toSet() );
+//            LOCATION_URIS.removeAll( locationRemovals );
+//
+//            POSITIVE_VALUE_URIS.add( "Positive" );
+//            POSITIVE_VALUE_URIS.add( "Negative" );
+//            POSITIVE_VALUE_URIS.add( "Unknown" );
+//            POSITIVE_VALUE_URIS.add( "Indeterminate" );
+//            POSITIVE_VALUE_URIS.add( "Equivocal" );
+//
+//
+//            REGULAR_VALUE_URIS.add( "Regular" );
+//            REGULAR_VALUE_URIS.add( "Irregular" );
+//
+//            NORMAL_VALUE_URIS.add( "Normal" );
+//            NORMAL_VALUE_URIS.add( "Abnormal" );
+//
+//            STABLE_VALUE_URIS.add( "Stable" );
+//            STABLE_VALUE_URIS.add( "Unstable" );
+//
+//            HIGH_VALUE_URIS.add( "High" );
+//            HIGH_VALUE_URIS.add( "Low" );
+//            HIGH_VALUE_URIS.add( "Elevated" );
 
-            POSITIVE_VALUE_URIS.add( "Positive" );
-            POSITIVE_VALUE_URIS.add( "Negative" );
-            POSITIVE_VALUE_URIS.add( "Unknown" );
-            POSITIVE_VALUE_URIS.add( "Indeterminate" );
-            POSITIVE_VALUE_URIS.add( "Equivocal" );
-
-
-            REGULAR_VALUE_URIS.add( "Regular" );
-            REGULAR_VALUE_URIS.add( "Irregular" );
-
-            NORMAL_VALUE_URIS.add( "Normal" );
-            NORMAL_VALUE_URIS.add( "Abnormal" );
-
-            STABLE_VALUE_URIS.add( "Stable" );
-            STABLE_VALUE_URIS.add( "Unstable" );
-
-            HIGH_VALUE_URIS.add( "High" );
-            HIGH_VALUE_URIS.add( "Low" );
-            HIGH_VALUE_URIS.add( "Elevated" );
-
-         }
+//         }
       }
    }
 

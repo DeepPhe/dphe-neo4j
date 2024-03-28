@@ -1,146 +1,91 @@
 package org.healthnlp.deepphe.neo4j.node;
 
 
+import org.healthnlp.deepphe.neo4j.node.xn.InfoNode;
+
+import java.util.List;
+
 /**
  * @author SPF , chip-nlp
  * @version %I%
  * @since 6/8/2020
  */
-public class Mention {
-   private String id;
-   private String classUri;
-   private String semanticType;
-   private String semanticGroup;
-   private double confidence;
-   private String noteId;
-   private String noteType;
+public class Mention extends InfoNode {
+
+   transient private String dpheGroup;
    private int begin;
    private int end;
-   private boolean negated;
-   private boolean uncertain;
-   private boolean generic;
-   private boolean conditional;
-   private boolean historic;
-   private String temporality;
+//   private String span;
+//   private String temporality;
+   transient private String text;
+   transient private List<Codification> codifications;
+   transient private String value;
 
-   public String getId() {
-      return id;
+   public String getDpheGroup() {
+      return dpheGroup;
    }
 
-   public void setId( final String id ) {
-      this.id = id;
+   public void setDpheGroup( final String semanticGrouping ) {
+      this.dpheGroup = semanticGrouping;
    }
 
-   public String getClassUri() {
-      return classUri;
-   }
-
-   public void setClassUri( final String classUri ) {
-      this.classUri = classUri;
-   }
-
-   public String getSemanticType() {
-      return semanticType;
-   }
-
-   public void setSemanticType( final String semanticType ) {
-      this.semanticType = semanticType;
-   }
-
-   public String getSemanticGroup() {
-      return semanticGroup;
-   }
-
-   public void setSemanticGroup( final String semanticGroup ) {
-      this.semanticGroup = semanticGroup;
-   }
-
-   public double getConfidence() {
-      return confidence;
-   }
-
-   public void setConfidence( final double confidence ) {
-      this.confidence = confidence;
-   }
-
-   public String getNoteId() {
-      return noteId;
-   }
-
-   public void setNoteId( final String noteId ) {
-      this.noteId = noteId;
-   }
-
-   public String getNoteType() {
-      return noteType;
-   }
-
-   public void setNoteType( final String noteType ) {
-      this.noteType = noteType;
+//   public String getSpan() {
+//      return span;
+//   }
+//
+   public void setSpan( final int begin, final int end ) {
+      this.begin = begin;
+      this.end = end;
+//      span = begin + "," + end;
    }
 
    public int getBegin() {
       return begin;
    }
 
-   public void setBegin( final int begin ) {
-      this.begin = begin;
-   }
+//   public void setBegin( final int begin ) {
+//      this.begin = begin;
+//   }
 
    public int getEnd() {
       return end;
    }
 
-   public void setEnd( final int end ) {
-      this.end = end;
+//   public void setEnd( final int end ) {
+//      this.end = end;
+//   }
+
+//   public String getTemporality() {
+//      return temporality;
+//   }
+//
+//   public void setTemporality( final String temporality ) {
+//      this.temporality = temporality;
+//   }
+
+   public String getText() {
+      return text;
    }
 
-   public boolean isNegated() {
-      return negated;
+   public void setText( final String text ) {
+      this.text = text;
    }
 
-   public void setNegated( final boolean negated ) {
-      this.negated = negated;
+   public List<Codification> getCodifications() {
+      return codifications;
    }
 
-   public boolean isUncertain() {
-      return uncertain;
+   public void setCodifications( final List<Codification> codifications ) {
+      this.codifications = codifications;
    }
 
-   public void setUncertain( final boolean uncertain ) {
-      this.uncertain = uncertain;
+   public String getValue() {
+      return value;
    }
 
-   public boolean isGeneric() {
-      return generic;
+   public void setValue( final String value ) {
+      this.value = value;
    }
 
-   public void setGeneric( final boolean generic ) {
-      this.generic = generic;
-   }
-
-   public boolean isConditional() {
-      return conditional;
-   }
-
-   public void setConditional( final boolean conditional ) {
-      this.conditional = conditional;
-   }
-
-   public boolean isHistoric() {
-      return historic;
-   }
-
-   public void setHistoric( final boolean historic ) {
-      this.historic = historic;
-   }
-
-   public String getTemporality() {
-      return temporality;
-   }
-
-   public void setTemporality( final String temporality ) {
-      this.temporality = temporality;
-   }
 
 }

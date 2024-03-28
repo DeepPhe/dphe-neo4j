@@ -1,14 +1,11 @@
-package org.healthnlp.deepphe.neo4j.node;
-
-
-import org.healthnlp.deepphe.neo4j.node.xn.ConfidenceOwner;
+package org.healthnlp.deepphe.neo4j.node.xn;
 
 /**
  * @author SPF , chip-nlp
- * @version %I%
- * @since 6/9/2020
+ * @since {1/11/2024}
  */
-public class MentionRelation extends ConfidenceOwner {
+public class ConceptRelation extends ConfidenceOwner {
+
    private String type;
    private String sourceId;
    private String targetId;
@@ -25,7 +22,7 @@ public class MentionRelation extends ConfidenceOwner {
       return sourceId;
    }
 
-   public void setSourceId( final String sourceId ) {
+   public void setSourceId(final String sourceId) {
       this.sourceId = sourceId;
    }
 
@@ -33,9 +30,8 @@ public class MentionRelation extends ConfidenceOwner {
       return targetId;
    }
 
-   public void setTargetId( final String targetId ) {
+   public void setTargetId(final String targetId) {
       this.targetId = targetId;
    }
-
 
 }
